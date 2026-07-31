@@ -401,6 +401,10 @@ export default function GraderPage() {
           </div>
 
           <div className="space-y-6 px-6 py-5">
+            <QuestionFigure
+              src={outcome.match.question.figure}
+              intro={outcome.match.question.intro}
+            />
             {outcome.result.parts.map((pr) => (
               <div key={pr.part.ref}>
                 <div className="flex items-baseline gap-2">
@@ -537,6 +541,10 @@ export default function GraderPage() {
           </div>
 
           <div className="space-y-6 px-6 py-5">
+            <QuestionFigure
+              src={outcome.match.question.figure}
+              intro={outcome.match.question.intro}
+            />
             {outcome.parts.map((part) => (
               <div key={part.ref}>
                 <div className="flex items-baseline gap-2">
@@ -640,6 +648,33 @@ export default function GraderPage() {
             )}
           </div>
         </section>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The FIGURE or TABLE a structured question refers to.
+ *
+ * The scans are black line art on white, so they get a white plate — on the
+ * dark theme they would otherwise be black-on-near-black and invisible.
+ */
+function QuestionFigure({ src, intro }: { src?: string; intro?: string }) {
+  if (!intro && !src) return null;
+  return (
+    <div>
+      {intro && (
+        <p className="rounded-xl bg-teal-700/5 px-4 py-3 text-sm leading-relaxed text-[#14343f]/85 dark:bg-white/5 dark:text-slate-200">
+          {intro}
+        </p>
+      )}
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt="Figure for this question"
+          className="mx-auto mt-3 max-h-64 w-auto max-w-full rounded-xl bg-white p-3"
+        />
       )}
     </div>
   );

@@ -45,6 +45,12 @@ export interface Structured {
   session: string;
   number: string;
   intro?: string;
+  /**
+   * The FIGURE / TABLE the question refers to. Questions that say "FIGURE 1
+   * shows a cell cycle" cannot be answered without it, so this is required
+   * wherever the intro or a prompt mentions one — enforced by a test.
+   */
+  figure?: string;
   parts: QuestionPart[];
 }
 
@@ -116,7 +122,7 @@ const CH3: Chapter = {
     },
     {
       id: "c3q5",
-      stem: "The figure in your tutorial shows measurements taken during one mitotic cell cycle. Which stage of mitosis occurs during X, and which measurements are illustrated by curves 1 and 2?",
+      stem: "The figure below shows measurements taken during one mitotic cell cycle. Which stage of mitosis occurs during X, and which measurements are illustrated by curves 1 and 2?",
       options: [
         "A. Metaphase — curve 1 / curve 2",
         "B. Metaphase — curve 2 / curve 1",
@@ -192,6 +198,7 @@ const CH3: Chapter = {
       session: "PSPM I 2018/2019",
       number: "1",
       intro: "FIGURE 1 shows a cell cycle with phases P, Q and R labelled alongside Mitosis.",
+      figure: "/figures/c3-2018-figure1.png",
       parts: [
         {
           ref: "(a)(i)",
@@ -270,6 +277,7 @@ const CH3: Chapter = {
       session: "PSPM I 2012/2013",
       number: "2",
       intro: "FIGURE 2 shows the stages of the cell cycle, labelled P, Q, R and S.",
+      figure: "/figures/c3-2012-figure2.png",
       parts: [
         {
           ref: "(a)",
@@ -506,9 +514,10 @@ const CH4: Chapter = {
     },
     {
       id: "c4q13",
-      stem: "The pedigree in your tutorial shows the inheritance of haemophilia in a family. What is the genotype of person 7?",
+      stem: "The pedigree below shows the inheritance of haemophilia in a family. What is the genotype of person 7?",
       options: ["A. XᴴXᴴ", "B. XᴴY", "C. XᴴXʰ", "D. XʰXʰ",],
       answer: "C",
+      figure: "/figures/c4q13-pedigree.png",
       explain:
         "Person 7 is a phenotypically normal female with an affected son, so she must be a carrier — XᴴXʰ.",
     },

@@ -330,5 +330,48 @@ check(
   true,
 );
 
+// ── Anything that refers to a visual must supply it ───────────────────────
+//
+// A question reading "FIGURE 1 shows a cell cycle" or "the pedigree below"
+// cannot be answered without the artwork. This catches the case where a
+// question is transcribed but its figure is forgotten.
+const VISUAL =
+  /figure|diagram|pedigree|graph|punnett|shown below|below shows|the figure/i;
+
+const missingVisual: string[] = [];
+
+for (const ch of CHAPTERS) {
+  for (const q of ch.mcq) {
+    if (VISUAL.test(q.stem) && !q.figure) missingVisual.push(`mcq ${q.id}`);
+  }
+  for (const s of ch.structured) {
+    const refersToVisual =
+      VISUAL.test(s.intro ?? "") || s.parts.some((p) => VISUAL.test(p.prompt));
+    if (refersToVisual && !s.figure) missingVisual.push(`structured ${s.id}`);
+  }
+}
+if (missingVisual.length)
+  console.log(`  ! refers to a visual but has none: ${missingVisual.join(", ")}`);
+check("every question referring to a visual supplies it", missingVisual.length, 0);
+
+// And every referenced file must actually be on disk.
+const fs = await import("node:fs");
+const allPaths = [
+  ...CHAPTERS.flatMap((c) => c.mcq).flatMap((q) =>
+    [q.figure, q.optionsFigure].filter(Boolean),
+  ),
+  ...CHAPTERS.flatMap((c) => c.structured).map((s) => s.figure).filter(Boolean),
+] as string[];
+const absent = allPaths.filter((p) => !fs.existsSync(`public${p}`));
+if (absent.length) console.log(`  ! missing files: ${absent.join(", ")}`);
+check("every referenced figure file exists on disk", absent.length, 0);
+check("figures wired up", allPaths.length, 10);
+
+// No orphans: every bundled file must be referenced by a question.
+const onDisk = fs.readdirSync("public/figures").map((f) => `/figures/${f}`);
+const orphans = onDisk.filter((f) => !allPaths.includes(f));
+if (orphans.length) console.log(`  ! unreferenced: ${orphans.join(", ")}`);
+check("no unreferenced figure files", orphans.length, 0);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
