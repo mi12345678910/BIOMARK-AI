@@ -426,6 +426,33 @@ check(
   null,
 );
 
+// Chapters 6 and 9 must route as precisely as Chapter 3.
+const routing: [string, string][] = [
+  ["Draw and label the replication fork showing the enzymes", "dna-replication-fork"],
+  ["Sketch the lagging strand and label the Okazaki fragments", "dna-replication-lagging"],
+  ["Draw a labelled diagram of transcription", "transcription"],
+  ["Draw a mature mRNA showing the 5 cap and poly-A tail", "mrna-processing"],
+  ["Draw and label the elongation cycle of translation", "translation-elongation"],
+  ["Draw how a tRNA is charged by its synthetase", "trna-charging"],
+  ["Draw the genetic code table", "genetic-code"],
+  ["Draw and label the structure of a flower", "flower-structure"],
+  ["Label the parts of the carpel", "flower-structure"],
+  ["Draw and label the embryo sac", "plant-life-cycle"],
+  ["Lukiskan struktur bunga dan labelkan bahagiannya", "flower-structure"],
+];
+const misrouted = routing.filter(([q, want]) => findDiagram(q)?.id !== want);
+if (misrouted.length)
+  misrouted.forEach(([q, want]) =>
+    console.log(`  ! "${q}" -> ${findDiagram(q)?.id ?? "none"} (wanted ${want})`),
+  );
+check("Ch6 and Ch9 drawing topics route correctly", misrouted.length, 0);
+
+check(
+  "diagram coverage spans chapters 3, 6 and 9",
+  [...new Set(DIAGRAMS.map((d) => d.chapter))].sort((a, b) => a - b),
+  [3, 6, 9],
+);
+
 // Every diagram entry must be complete and its image bundled.
 const badDiagrams = DIAGRAMS.filter(
   (d) =>
