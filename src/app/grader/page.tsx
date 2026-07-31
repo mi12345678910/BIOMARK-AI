@@ -7,6 +7,7 @@ import { markQuestion, type QuestionResult } from "@/lib/marking";
 import {
   findQuestionMatch,
   searchNotes,
+  selectRelevantParts,
   type NoteMatch,
   type QuestionMatch,
 } from "@/lib/lookup";
@@ -128,13 +129,16 @@ export default function GraderPage() {
 
     const match = findQuestionMatch(combined);
     if (match) {
-      // Case 1 — mark every part against the whole submission.
+      // Case 1 — mark ONLY the parts the student actually asked about.
+      // Marking every part of the stored question scored them against work
+      // they never attempted and made one answer look like several.
+      const parts = selectRelevantParts(match.question, combined);
       const answers: Record<string, string> = {};
-      for (const part of match.question.parts) answers[part.ref] = combined;
+      for (const part of parts) answers[part.ref] = combined;
       setOutcome({
         mode: "graded",
         match,
-        result: markQuestion(match.question.parts, answers),
+        result: markQuestion(parts, answers),
       });
       return;
     }

@@ -52,7 +52,7 @@ const STRINGS = {
       "Paste your question and answer, or attach photos of your work. You will get grading and an explanation built from your lecturer's notes.",
     pasteBoxTitle: "Your question and answer",
     pasteBoxPlaceholder:
-      "Paste the question and your answer here.\n\nExample:\n\nQ: In a population of mice, 36% have white coats (recessive). Calculate the phenotype frequency of black-coated mice. [3 marks]\n\nMy answer: q² = 0.36 so q = 0.6. p = 1 − 0.6 = 0.4. Black coat = p² = 0.16\n\n— or paste just the question, and I'll explain how to answer it.",
+      "Type or paste your question here, then your answer below it.\n\nYou can also attach a photo instead — this box can stay empty.",
     attachPhoto: "Attach a photo or PDF",
     dropOrPaste: "…or drag a photo of your handwritten answer straight in",
     advancedScheme: "Have the official marking scheme? Add it (optional)",
@@ -170,7 +170,7 @@ const STRINGS = {
       "Tampal soalan dan jawapan anda, atau lampirkan foto kerja anda. Anda akan mendapat pemarkahan dan penerangan daripada nota pensyarah anda.",
     pasteBoxTitle: "Soalan dan jawapan anda",
     pasteBoxPlaceholder:
-      "Tampal soalan dan jawapan anda di sini.\n\nContoh:\n\nS: Dalam populasi tikus, 36% berbulu putih (resesif). Hitung frekuensi fenotip tikus berbulu hitam. [3 markah]\n\nJawapan saya: q² = 0.36 jadi q = 0.6. p = 1 − 0.6 = 0.4. Bulu hitam = p² = 0.16\n\n— atau tampal soalan sahaja, dan saya akan terangkan cara menjawabnya.",
+      "Taip atau tampal soalan anda di sini, kemudian jawapan anda di bawahnya.\n\nAnda juga boleh lampirkan foto sahaja — kotak ini boleh dibiarkan kosong.",
     attachPhoto: "Lampirkan foto atau PDF",
     dropOrPaste: "…atau seret foto jawapan tulisan tangan anda terus ke sini",
     advancedScheme: "Ada skema jawapan rasmi? Tambah di sini (pilihan)",

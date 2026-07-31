@@ -105,6 +105,45 @@ export function bestPartFor(
   return best?.part ?? null;
 }
 
+/**
+ * The parts of a stored question the student actually asked about.
+ *
+ * A past-year question usually has several parts, and a student submits one of
+ * them. Marking all of them scores the student against work they never
+ * attempted — a correct single answer came back as 3/10 instead of 3/3, with
+ * three unrelated parts listed as failed. Only parts whose wording the student
+ * clearly reproduced are marked.
+ */
+export function selectRelevantParts(
+  question: Structured,
+  text: string,
+): QuestionPart[] {
+  const studentTerms = new Set(tokenise(text));
+
+  const scored = question.parts.map((part) => {
+    const terms = [...new Set(tokenise(part.prompt))];
+    const score = terms.length
+      ? terms.filter((t) => studentTerms.has(t)).length / terms.length
+      : 0;
+    return { part, score };
+  });
+
+  const top = Math.max(...scored.map((s) => s.score));
+
+  // Nothing resembles any part — fall back to the single closest so the
+  // student still gets marked on something rather than on everything.
+  if (top < 0.3) {
+    const best = scored.reduce((a, b) => (b.score > a.score ? b : a));
+    return [best.part];
+  }
+
+  // Keep parts close to the best match: this admits a student who answered
+  // (a)(i) and (a)(ii) together, without dragging in unrelated parts.
+  return scored
+    .filter((s) => s.score >= Math.max(0.3, top * 0.6))
+    .map((s) => s.part);
+}
+
 /* ── Case 2 — explain from the lecturer's notes ────────────────────────── */
 
 export interface NoteMatch {

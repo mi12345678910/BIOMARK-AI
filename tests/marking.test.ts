@@ -176,5 +176,37 @@ const emptyNotes = NOTES_ALL.filter(
 );
 check("notes: every section has an outcome and content", emptyNotes.length, 0);
 
+// ── Only the parts the student asked about get marked ─────────────────────
+const { selectRelevantParts } = await import("../src/lib/lookup.ts");
+
+const onePart =
+  "In a randomly breeding population of mice, black coat H is dominant to white coat h. 36% have white coats. Calculate the phenotype frequency of black coat mice. My answer: q = 0.6, p = 0.4, black = 0.64";
+const mice = findQuestionMatch(onePart)!;
+const chosen = selectRelevantParts(mice.question, onePart);
+
+check("one question asked -> one part marked", chosen.length, 1);
+check("the correct part is chosen", chosen[0]?.ref, "(b)");
+
+const scoped = markQuestion(chosen, { [chosen[0].ref]: onePart });
+check("a fully correct single answer scores full marks", scoped.awarded, 3);
+check("maximum reflects only what was asked", scoped.maximum, 3);
+
+// Two sub-parts submitted together should both be marked.
+const twoParts =
+  "State the Hardy-Weinberg Principle. List TWO conditions for this principle to be achieved. " +
+  "In genetic equilibrium the allele and genotype frequencies remain constant. No mutation, no migration.";
+const hw = findQuestionMatch(twoParts)!;
+const bothRefs = selectRelevantParts(hw.question, twoParts).map((p) => p.ref);
+check("two sub-parts asked -> both marked", bothRefs, ["(a)(i)", "(a)(ii)"]);
+
+// The placeholder is a hint, not payload: it must never reach the marker.
+check(
+  "placeholder text is not treated as a question",
+  findQuestionMatch(
+    "Type or paste your question here, then your answer below it. You can also attach a photo instead.",
+  ),
+  null,
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
