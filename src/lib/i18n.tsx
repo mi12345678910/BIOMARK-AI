@@ -49,7 +49,7 @@ const STRINGS = {
 
     graderTitle: "Type it or photograph it.",
     graderSubtitle:
-      "Paste your question and answer, or attach photos of your work. If the question is in the official KPM scheme bank, you get marks and a keyword breakdown. If it isn't, you get an explanation built from your lecturer's notes.",
+      "Paste your question and answer, or attach photos of your work. You will get grading and an explanation built from your lecturer's notes.",
     pasteBoxTitle: "Your question and answer",
     pasteBoxPlaceholder:
       "Paste the question and your answer here.\n\nExample:\n\nQ: In a population of mice, 36% have white coats (recessive). Calculate the phenotype frequency of black-coated mice. [3 marks]\n\nMy answer: q² = 0.36 so q = 0.6. p = 1 − 0.6 = 0.4. Black coat = p² = 0.16\n\n— or paste just the question, and I'll explain how to answer it.",
@@ -167,7 +167,7 @@ const STRINGS = {
 
     graderTitle: "Taip atau ambil foto.",
     graderSubtitle:
-      "Tampal soalan dan jawapan anda, atau lampirkan foto kerja anda. Jika soalan itu ada dalam bank skema rasmi KPM, anda dapat markah dan pecahan kata kunci. Jika tiada, anda dapat penerangan daripada nota pensyarah anda.",
+      "Tampal soalan dan jawapan anda, atau lampirkan foto kerja anda. Anda akan mendapat pemarkahan dan penerangan daripada nota pensyarah anda.",
     pasteBoxTitle: "Soalan dan jawapan anda",
     pasteBoxPlaceholder:
       "Tampal soalan dan jawapan anda di sini.\n\nContoh:\n\nS: Dalam populasi tikus, 36% berbulu putih (resesif). Hitung frekuensi fenotip tikus berbulu hitam. [3 markah]\n\nJawapan saya: q² = 0.36 jadi q = 0.6. p = 1 − 0.6 = 0.4. Bulu hitam = p² = 0.16\n\n— atau tampal soalan sahaja, dan saya akan terangkan cara menjawabnya.",
