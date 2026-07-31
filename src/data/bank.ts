@@ -16,7 +16,7 @@
  * ────────────────────────────────────────────────────────────────────────────
  */
 
-import type { QuestionPart } from "../lib/marking";
+import type { QuestionPart } from "../lib/marking.ts";
 
 export interface Mcq {
   id: string;

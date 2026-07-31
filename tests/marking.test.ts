@@ -1,5 +1,6 @@
 import { markQuestion, markPart } from "../src/lib/marking.ts";
 import { findStructured, CHAPTERS } from "../src/data/bank.ts";
+import { NOTES as NOTES_ALL } from "../src/data/notes.ts";
 
 let pass = 0;
 let fail = 0;
@@ -133,6 +134,47 @@ check(
   CHAPTERS.map((c) => c.structured.length),
   [2, 0, 15],
 );
+
+// ── Case 1 / Case 2 routing ───────────────────────────────────────────────
+const { findQuestionMatch, searchNotes } = await import("../src/lib/lookup.ts");
+
+// A student pasting a real bank question should be routed to grading.
+const hit = findQuestionMatch(
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice. My answer: q = 0.6, p = 0.4",
+);
+check("Case 1: real bank question is matched", hit?.question.id, "c5-ups2-2005");
+
+// Something on-syllabus but NOT in the bank must NOT be force-matched.
+check(
+  "Case 2: unbanked question is not falsely matched",
+  findQuestionMatch(
+    "Explain how the lac operon is regulated in the presence of lactose and describe the role of the repressor protein",
+  ),
+  null,
+);
+check(
+  "Case 2: vague text is not falsely matched",
+  findQuestionMatch("what is biology"),
+  null,
+);
+
+// Notes fallback must surface the right chapter.
+const lac = searchNotes("lac operon repressor lactose regulation", 3);
+check("notes: lac operon resolves to Chapter 6", lac[0]?.section.chapter, 6);
+
+const meiosis = searchNotes("prophase I leptotene zygotene pachytene chiasmata", 3);
+check("notes: prophase I resolves to Chapter 3", meiosis[0]?.section.chapter, 3);
+
+const mutation = searchNotes("base substitution missense nonsense frameshift", 3);
+check("notes: mutation types resolve to Chapter 7", mutation[0]?.section.chapter, 7);
+
+check("notes: gibberish returns nothing", searchNotes("zzzz qqqq", 3).length, 0);
+
+// Every note section must carry usable content.
+const emptyNotes = NOTES_ALL.filter(
+  (n) => n.content.length < 2 || n.outcome.trim().length < 5,
+);
+check("notes: every section has an outcome and content", emptyNotes.length, 0);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

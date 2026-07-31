@@ -47,9 +47,9 @@ const STRINGS = {
     syllabusBody:
       "Cell Division · Genetic Inheritance · Population Genetics · Expression of Biological Information · Mutation · Recombinant DNA Technology · Reproduction & Development · and every Semester 2 chapter.",
 
-    graderTitle: "Answer it. See every mark.",
+    graderTitle: "Type it or photograph it.",
     graderSubtitle:
-      "Pick a past-year question, write your answer, and BioMark AI marks it against the official KPM scheme — showing which keyword earned or cost you each mark.",
+      "Paste your question and answer, or attach photos of your work. If the question is in the official KPM scheme bank, you get marks and a keyword breakdown. If it isn't, you get an explanation built from your lecturer's notes.",
     pasteBoxTitle: "Your question and answer",
     pasteBoxPlaceholder:
       "Paste the question and your answer here.\n\nExample:\n\nQ: In a population of mice, 36% have white coats (recessive). Calculate the phenotype frequency of black-coated mice. [3 marks]\n\nMy answer: q² = 0.36 so q = 0.6. p = 1 − 0.6 = 0.4. Black coat = p² = 0.16\n\n— or paste just the question, and I'll explain how to answer it.",
@@ -97,6 +97,20 @@ const STRINGS = {
     modelAnswer: "Model answer",
     quizComplete: "Quiz complete",
     finalScore: "Final score",
+
+    scanning: "Reading your photos…",
+    ocrHeading: "Text read from your photos",
+    ocrCaveat:
+      "This is what the scanner extracted. Printed text reads well; handwriting often doesn't. If it looks wrong, retype your answer in the box above and mark again.",
+    ocrLow: "— low confidence, check this",
+    ocrEmpty: "(nothing readable found in this image)",
+    ocrFailed: "Could not read the photos.",
+
+    explainTitle: "Explanation from your lecturer's notes",
+    explainSubtitle:
+      "This question isn't in the marking-scheme bank, so no marks are awarded — here is the relevant material instead.",
+    explainNothing:
+      "Nothing in the lecture notes matched closely enough. Try naming the topic directly, e.g. \"meiosis prophase I\" or \"Hardy-Weinberg\".",
 
     pickChapter: "Chapter",
     pickQuestion: "Past-year question",
@@ -151,9 +165,9 @@ const STRINGS = {
     syllabusBody:
       "Pembahagian Sel · Pewarisan Genetik · Genetik Populasi · Ekspresi Maklumat Biologi · Mutasi · Teknologi DNA Rekombinan · Pembiakan & Perkembangan · dan setiap bab Semester 2.",
 
-    graderTitle: "Jawab. Lihat setiap markah.",
+    graderTitle: "Taip atau ambil foto.",
     graderSubtitle:
-      "Pilih soalan tahun lepas, tulis jawapan anda, dan BioMark AI menandanya mengikut skema rasmi KPM — menunjukkan kata kunci yang memberi atau menghilangkan setiap markah.",
+      "Tampal soalan dan jawapan anda, atau lampirkan foto kerja anda. Jika soalan itu ada dalam bank skema rasmi KPM, anda dapat markah dan pecahan kata kunci. Jika tiada, anda dapat penerangan daripada nota pensyarah anda.",
     pasteBoxTitle: "Soalan dan jawapan anda",
     pasteBoxPlaceholder:
       "Tampal soalan dan jawapan anda di sini.\n\nContoh:\n\nS: Dalam populasi tikus, 36% berbulu putih (resesif). Hitung frekuensi fenotip tikus berbulu hitam. [3 markah]\n\nJawapan saya: q² = 0.36 jadi q = 0.6. p = 1 − 0.6 = 0.4. Bulu hitam = p² = 0.16\n\n— atau tampal soalan sahaja, dan saya akan terangkan cara menjawabnya.",
@@ -201,6 +215,20 @@ const STRINGS = {
     modelAnswer: "Jawapan model",
     quizComplete: "Kuiz selesai",
     finalScore: "Markah akhir",
+
+    scanning: "Membaca foto anda…",
+    ocrHeading: "Teks yang dibaca daripada foto anda",
+    ocrCaveat:
+      "Ini teks yang berjaya diimbas. Teks bercetak dibaca dengan baik; tulisan tangan selalunya tidak. Jika ia kelihatan salah, taip semula jawapan anda di kotak di atas dan tanda sekali lagi.",
+    ocrLow: "— keyakinan rendah, sila semak",
+    ocrEmpty: "(tiada teks boleh dibaca dalam imej ini)",
+    ocrFailed: "Tidak dapat membaca foto.",
+
+    explainTitle: "Penerangan daripada nota pensyarah anda",
+    explainSubtitle:
+      "Soalan ini tiada dalam bank skema pemarkahan, jadi tiada markah diberi — berikut ialah bahan berkaitan.",
+    explainNothing:
+      "Tiada dalam nota kuliah yang cukup sepadan. Cuba namakan topik secara terus, contohnya \"profasa I meiosis\" atau \"Hardy-Weinberg\".",
 
     pickChapter: "Bab",
     pickQuestion: "Soalan tahun lepas",

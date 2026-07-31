@@ -11,6 +11,12 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    /*
+     * src/lib and src/data import each other with explicit .ts extensions so
+     * the same files run unchanged under Node's --experimental-strip-types in
+     * tests/. Safe here because noEmit is on — nothing is rewritten on output.
+     */
+    "allowImportingTsExtensions": true,
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
@@ -24,5 +30,5 @@
    * which requires explicit .ts import extensions that this compiler rejects.
    * Run it with `npm test`; it is not part of the Next build.
    */
-  "exclude": ["node_modules", "tests"]
+  "exclude": ["node_modules"]
 }
