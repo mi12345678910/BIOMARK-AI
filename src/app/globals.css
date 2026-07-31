@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* Warm ivory paper, deep teal, coral accent — the palette the whole app
+     is built on. Change these three families and everything follows. */
+  --color-paper: #fdf6e8;
+  --color-paper-2: #f7ecd8;
+  --color-ink: #14343f;
+
+  /* Full coral ramp — every shade referenced in the UI must exist here, or
+     Tailwind silently drops the class and the element renders unstyled. */
+  --color-coral-300: #f5b3a5;
+  --color-coral-400: #ef9080;
+  --color-coral-500: #e8735d;
+  --color-coral-600: #d15841;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  @apply antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #0b1f26;
+    @apply text-slate-100;
+  }
+}
+
+/* Mermaid renders an SVG with an intrinsic width; let it scale down on
+   mobile but never force the page itself to scroll sideways. */
+.mermaid-svg svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.biomark-prose > *:first-child {
+  margin-top: 0;
+}
+
+/* Streaming cursor on the grader output. */
+@keyframes biomark-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.streaming-cursor::after {
+  content: "▋";
+  animation: biomark-blink 1s step-end infinite;
+  @apply ml-0.5 text-teal-600;
+}
+
+/* Slow drift for the decorative cell illustrations. */
+@keyframes biomark-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(2deg);
+  }
+}
+.bio-float {
+  animation: biomark-float 9s ease-in-out infinite;
+}
+.bio-float-slow {
+  animation: biomark-float 13s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bio-float,
+  .bio-float-slow {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
