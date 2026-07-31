@@ -299,5 +299,36 @@ check(
   0,
 );
 
+// ── Every MCQ option must be readable ─────────────────────────────────────
+//
+// Three Chapter 3 questions print their options as chromosome DIAGRAMS, so
+// their `options` are bare letters. Rendering those alone gave students empty
+// buttons with nothing to choose between. A letter-only option is therefore
+// only acceptable when the question also supplies an optionsFigure.
+const unreadable: string[] = [];
+for (const ch of CHAPTERS) {
+  for (const q of ch.mcq) {
+    const wordless = q.options.every(
+      (o) => o.replace(/^[A-D][.)]?\s*/, "").trim().length === 0,
+    );
+    if (wordless && !q.optionsFigure) unreadable.push(q.id);
+  }
+}
+if (unreadable.length) console.log(`  ! no readable options: ${unreadable.join(", ")}`);
+check("every MCQ has readable options or an options figure", unreadable.length, 0);
+
+// The figure-based ones must actually point at bundled files.
+const figureQs = CHAPTERS.flatMap((c) => c.mcq).filter((q) => q.optionsFigure);
+check("figure-option questions found", figureQs.length, 3);
+check(
+  "all figure paths are under /figures",
+  figureQs.every(
+    (q) =>
+      q.optionsFigure!.startsWith("/figures/") &&
+      (!q.figure || q.figure.startsWith("/figures/")),
+  ),
+  true,
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

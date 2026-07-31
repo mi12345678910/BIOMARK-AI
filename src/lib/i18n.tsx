@@ -106,6 +106,8 @@ const STRINGS = {
     ocrEmpty: "(nothing readable found in this image)",
     ocrFailed: "Could not read the photos.",
 
+    optionsAreDiagrams: "The options for this question are diagrams — A, B, C, D from left to right.",
+
     whyTitle: "Why you lost those marks",
     whySubtitle:
       "From your lecturer's notes, on the exact concepts behind the scheme points you missed.",
@@ -233,6 +235,8 @@ const STRINGS = {
     ocrLow: "— keyakinan rendah, sila semak",
     ocrEmpty: "(tiada teks boleh dibaca dalam imej ini)",
     ocrFailed: "Tidak dapat membaca foto.",
+
+    optionsAreDiagrams: "Pilihan bagi soalan ini ialah rajah — A, B, C, D dari kiri ke kanan.",
 
     whyTitle: "Mengapa markah itu hilang",
     whySubtitle:

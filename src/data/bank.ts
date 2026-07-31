@@ -26,6 +26,18 @@ export interface Mcq {
   answer: string;
   /** Shown after answering. Written from the notes, not generated. */
   explain?: string;
+  /**
+   * Diagram belonging to the question stem, e.g. "the figure shows anaphase
+   * of mitosis". Path under /public.
+   */
+  figure?: string;
+  /**
+   * Some past-year MCQs offer DIAGRAMS as the four options rather than words.
+   * Their `options` are therefore bare letters, and this strip — A, B, C, D
+   * side by side, exactly as printed — is what the student actually reads.
+   * Without it those questions are unanswerable.
+   */
+  optionsFigure?: string;
 }
 
 export interface Structured {
@@ -112,6 +124,7 @@ const CH3: Chapter = {
         "D. Anaphase — curve 2 / curve 1",
       ],
       answer: "C",
+      figure: "/figures/c3q5-graph.png",
       explain:
         "At X the centromere-to-pole distance falls while sister-chromatid separation rises — the signature of anaphase.",
     },
@@ -120,6 +133,8 @@ const CH3: Chapter = {
       stem: "The figure shows the chromosomes of a cell before the metaphase stage of mitosis. Which option shows the chromosomes of each cell at telophase?",
       options: ["A", "B", "C", "D"],
       answer: "C",
+      figure: "/figures/c3q6-stem.png",
+      optionsFigure: "/figures/c3q6-options.png",
       explain:
         "At telophase each daughter cell receives single-chromatid chromosomes, at the same chromosome number as the parent.",
     },
@@ -128,6 +143,8 @@ const CH3: Chapter = {
       stem: "The figure shows anaphase of mitosis. Which diagram shows anaphase I during meiosis in the same organism?",
       options: ["A", "B", "C", "D"],
       answer: "B",
+      figure: "/figures/c3q7-stem.png",
+      optionsFigure: "/figures/c3q7-options.png",
       explain:
         "In anaphase I homologous chromosomes separate while sister chromatids stay joined — so each pole receives half the chromosome number, still as two-chromatid chromosomes.",
     },
@@ -136,6 +153,8 @@ const CH3: Chapter = {
       stem: "The figure shows a cell at anaphase I of meiosis. Which diagram shows a normal gamete that could be produced from this cell?",
       options: ["A", "B", "C", "D"],
       answer: "D",
+      figure: "/figures/c3q8-stem.png",
+      optionsFigure: "/figures/c3q8-options.png",
       explain:
         "A gamete is haploid with single-chromatid chromosomes, after meiosis II has separated the sister chromatids.",
     },

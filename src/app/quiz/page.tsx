@@ -116,7 +116,40 @@ export default function QuizPage() {
             {current.stem}
           </p>
 
-          <div className="mt-4 space-y-2">
+          {/* Diagram belonging to the stem. Scans are black line art on white,
+              so they need a white plate to stay readable in dark mode. */}
+          {current.figure && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={current.figure}
+              alt="Figure for this question"
+              className="mx-auto mt-4 max-h-56 w-auto max-w-full rounded-xl bg-white p-3"
+            />
+          )}
+
+          {/* Options printed as diagrams rather than words. The strip shows
+              A B C D in order, matching the buttons underneath. */}
+          {current.optionsFigure && (
+            <figure className="mt-4">
+              <img
+                // eslint-disable-next-line @next/next/no-img-element
+                src={current.optionsFigure}
+                alt="Answer options A, B, C and D"
+                className="w-full rounded-xl bg-white p-3"
+              />
+              <figcaption className="mt-1 text-center text-xs text-[#14343f]/70 dark:text-slate-300">
+                {t("optionsAreDiagrams")}
+              </figcaption>
+            </figure>
+          )}
+
+          <div
+            className={
+              current.optionsFigure
+                ? "mt-4 grid grid-cols-4 gap-2"
+                : "mt-4 space-y-2"
+            }
+          >
             {current.options.map((opt) => {
               const letter = opt.trim().charAt(0).toUpperCase();
               const isAnswer = letter === current.answer.trim().charAt(0);
@@ -128,7 +161,11 @@ export default function QuizPage() {
                   type="button"
                   disabled={!!picked}
                   onClick={() => choose(letter)}
-                  className={`block w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                  className={`block w-full rounded-xl border px-4 py-3 text-sm transition ${
+                    current.optionsFigure
+                      ? "text-center font-bold"
+                      : "text-left"
+                  } ${
                     picked && isAnswer
                       ? "border-emerald-500 bg-emerald-400/15 font-semibold"
                       : picked && isPicked
