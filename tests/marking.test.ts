@@ -373,5 +373,77 @@ const orphans = onDisk.filter((f) => !allPaths.includes(f));
 if (orphans.length) console.log(`  ! unreferenced: ${orphans.join(", ")}`);
 check("no unreferenced figure files", orphans.length, 0);
 
+// ── Drawing questions are answered, never marked ──────────────────────────
+const { isDrawingQuestion, findDiagram, DIAGRAMS } = await import(
+  "../src/data/diagrams.ts"
+);
+
+check(
+  "draw request is detected",
+  isDrawingQuestion("Draw and label the stages of meiosis I"),
+  true,
+);
+check(
+  "label request is detected",
+  isDrawingQuestion("Label the sub-stages of prophase I"),
+  true,
+);
+check("BM: lukiskan is detected", isDrawingQuestion("Lukiskan kitar sel"), true);
+
+// A supplied figure is NOT a drawing request and must still be marked.
+check(
+  "'FIGURE 1 shows...' is not a drawing question",
+  isDrawingQuestion("FIGURE 1 shows a cell cycle. Name phase P."),
+  false,
+);
+check(
+  "a calculation is not a drawing question",
+  isDrawingQuestion(
+    "In a population of mice 36% have white coats. Calculate the phenotype frequency.",
+  ),
+  false,
+);
+
+// The right diagram must come back.
+check(
+  "meiosis I request resolves to the meiosis I diagram",
+  findDiagram("Draw and label the stages of meiosis I")?.id,
+  "meiosis-1-stages",
+);
+check(
+  "prophase I sub-stages resolve correctly",
+  findDiagram("Draw the sub-stages of prophase I showing chiasmata")?.id,
+  "prophase-1-substages",
+);
+check(
+  "cell cycle request resolves correctly",
+  findDiagram("Draw the cell cycle and label G1, S and G2")?.id,
+  "cell-cycle",
+);
+check(
+  "unknown drawing topic returns nothing",
+  findDiagram("Draw the structure of a kangaroo"),
+  null,
+);
+
+// Every diagram entry must be complete and its image bundled.
+const badDiagrams = DIAGRAMS.filter(
+  (d) =>
+    d.labels.length < 2 ||
+    !d.guidance ||
+    !d.guidanceBm ||
+    !d.image.startsWith("/diagrams/") ||
+    !fs.existsSync(`public${d.image}`),
+);
+if (badDiagrams.length)
+  console.log(`  ! incomplete diagrams: ${badDiagrams.map((d) => d.id).join(", ")}`);
+check("every diagram answer is complete with a bundled image", badDiagrams.length, 0);
+
+const diagramOrphans = fs
+  .readdirSync("public/diagrams")
+  .map((f) => `/diagrams/${f}`)
+  .filter((f) => !DIAGRAMS.some((d) => d.image === f));
+check("no unreferenced diagram files", diagramOrphans.length, 0);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

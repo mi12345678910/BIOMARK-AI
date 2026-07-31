@@ -106,6 +106,14 @@ const STRINGS = {
     ocrEmpty: "(nothing readable found in this image)",
     ocrFailed: "Could not read the photos.",
 
+    diagramTitle: "Diagram answer",
+    diagramSubtitle:
+      "This is a drawing question, so here is the diagram and what earns the marks.",
+    diagramLabels: "Labels the examiner expects",
+    diagramGuidance: "How the marks are awarded",
+    diagramCannotMark:
+      "Drawings can't be marked here — nothing in this app can read a hand-drawn diagram. Compare your own drawing against the labels above.",
+
     optionsAreDiagrams: "The options for this question are diagrams — A, B, C, D from left to right.",
 
     whyTitle: "Why you lost those marks",
@@ -235,6 +243,14 @@ const STRINGS = {
     ocrLow: "— keyakinan rendah, sila semak",
     ocrEmpty: "(tiada teks boleh dibaca dalam imej ini)",
     ocrFailed: "Tidak dapat membaca foto.",
+
+    diagramTitle: "Jawapan rajah",
+    diagramSubtitle:
+      "Ini soalan lukisan, jadi berikut ialah rajah dan perkara yang mendapat markah.",
+    diagramLabels: "Label yang dijangka pemeriksa",
+    diagramGuidance: "Bagaimana markah diberi",
+    diagramCannotMark:
+      "Lukisan tidak boleh ditanda di sini — tiada apa dalam aplikasi ini yang boleh membaca rajah tulisan tangan. Bandingkan lukisan anda dengan label di atas.",
 
     optionsAreDiagrams: "Pilihan bagi soalan ini ialah rajah — A, B, C, D dari kiri ke kanan.",
 

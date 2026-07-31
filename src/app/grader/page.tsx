@@ -14,6 +14,11 @@ import {
 } from "@/lib/lookup";
 import type { QuestionPart } from "@/lib/marking";
 import { LOW_CONFIDENCE, recogniseImage } from "@/lib/ocr";
+import {
+  findDiagram,
+  isDrawingQuestion,
+  type DiagramAnswer,
+} from "@/data/diagrams";
 
 interface Attachment {
   id: string;
@@ -38,6 +43,8 @@ type Outcome =
     }
   /** Question submitted with no attempt — show how the marks are awarded. */
   | { mode: "modelAnswer"; match: QuestionMatch; parts: QuestionPart[] }
+  /** A drawing question — answered with the diagram, never marked. */
+  | { mode: "diagram"; diagram: DiagramAnswer }
   | { mode: "explained"; notes: NoteMatch[] }
   | { mode: "ocrFailed"; message: string }
   | { mode: "empty" };
@@ -134,6 +141,21 @@ export default function GraderPage() {
 
     if (!combined.trim()) {
       setOutcome({ mode: "empty" });
+      return;
+    }
+
+    // Drawing questions are checked FIRST and never marked. Nothing here can
+    // read a hand-drawn diagram, so scoring one would be guesswork — the
+    // student gets the diagram, its required labels, and the mark split.
+    if (isDrawingQuestion(combined)) {
+      const diagram = findDiagram(combined);
+      if (diagram) {
+        setOutcome({ mode: "diagram", diagram });
+        return;
+      }
+      // Asked to draw something we have no diagram for — the notes are still
+      // more useful than a spurious score.
+      setOutcome({ mode: "explained", notes: searchNotes(combined, 3) });
       return;
     }
 
@@ -599,6 +621,68 @@ export default function GraderPage() {
 
             <p className="rounded-xl bg-teal-700/5 px-4 py-3 text-xs text-[#14343f]/80 dark:bg-white/5 dark:text-slate-300">
               {t("modelHint")}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Drawing question: answer with the diagram ─────────────── */}
+      {outcome?.mode === "diagram" && (
+        <section className="overflow-hidden rounded-3xl border border-teal-700/15 bg-white/95 shadow-xl backdrop-blur dark:border-white/20 dark:bg-white/10">
+          <div className="bg-gradient-to-r from-[#14343f] to-teal-800 px-6 py-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+              {t("diagramTitle")}
+            </h2>
+            <p className="text-[11px] text-teal-100">{t("diagramSubtitle")}</p>
+          </div>
+
+          <div className="space-y-5 px-6 py-5">
+            <h3 className="text-base font-bold text-[#14343f] dark:text-white">
+              {lang === "bm" ? outcome.diagram.titleBm : outcome.diagram.title}
+              <span className="ml-2 rounded-full bg-teal-700/15 px-2.5 py-0.5 text-xs font-semibold text-teal-800 dark:bg-white/15 dark:text-teal-100">
+                {t("pickChapter")} {outcome.diagram.chapter}
+              </span>
+            </h3>
+
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={outcome.diagram.image}
+              alt={outcome.diagram.title}
+              className="w-full rounded-2xl bg-white p-3"
+            />
+
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+                {t("diagramLabels")}
+              </h4>
+              <ul className="mt-2 space-y-1.5">
+                {outcome.diagram.labels.map((l, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-2 rounded-lg bg-emerald-400/10 px-3 py-2 text-sm text-[#14343f] dark:text-slate-100"
+                  >
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                      ✓
+                    </span>
+                    <span>{l}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-teal-700/15 bg-teal-700/5 p-4 dark:border-white/15 dark:bg-white/5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+                {t("diagramGuidance")}
+              </h4>
+              <p className="mt-1.5 text-sm leading-relaxed text-[#14343f]/90 dark:text-slate-100">
+                {lang === "bm"
+                  ? outcome.diagram.guidanceBm
+                  : outcome.diagram.guidance}
+              </p>
+            </div>
+
+            <p className="rounded-xl border border-amber-400/50 bg-amber-400/10 px-4 py-3 text-xs text-amber-900 dark:text-amber-100">
+              ⚠️ {t("diagramCannotMark")}
             </p>
           </div>
         </section>
