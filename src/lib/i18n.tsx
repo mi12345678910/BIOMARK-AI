@@ -106,6 +106,11 @@ const STRINGS = {
     ocrEmpty: "(nothing readable found in this image)",
     ocrFailed: "Could not read the photos.",
 
+    modelTitle: "How this question is marked",
+    modelSubtitle: "you submitted the question without an answer",
+    modelHint:
+      "Each box is one scheme point and what it is worth. The tags are the keywords an examiner looks for. Write your own answer covering these, then submit again to be marked.",
+
     explainTitle: "Explanation from your lecturer's notes",
     explainSubtitle:
       "This question isn't in the marking-scheme bank, so no marks are awarded — here is the relevant material instead.",
@@ -223,6 +228,11 @@ const STRINGS = {
     ocrLow: "— keyakinan rendah, sila semak",
     ocrEmpty: "(tiada teks boleh dibaca dalam imej ini)",
     ocrFailed: "Tidak dapat membaca foto.",
+
+    modelTitle: "Bagaimana soalan ini ditanda",
+    modelSubtitle: "anda hantar soalan tanpa jawapan",
+    modelHint:
+      "Setiap kotak ialah satu mata skema dan nilainya. Tag ialah kata kunci yang dicari pemeriksa. Tulis jawapan anda sendiri yang merangkumi semua ini, kemudian hantar semula untuk ditanda.",
 
     explainTitle: "Penerangan daripada nota pensyarah anda",
     explainSubtitle:

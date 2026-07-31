@@ -6,11 +6,13 @@ import { useI18n } from "@/lib/i18n";
 import { markQuestion, type QuestionResult } from "@/lib/marking";
 import {
   findQuestionMatch,
+  hasAttempt,
   searchNotes,
   selectRelevantParts,
   type NoteMatch,
   type QuestionMatch,
 } from "@/lib/lookup";
+import type { QuestionPart } from "@/lib/marking";
 import { LOW_CONFIDENCE, recogniseImage } from "@/lib/ocr";
 
 interface Attachment {
@@ -28,6 +30,8 @@ interface Attachment {
 
 type Outcome =
   | { mode: "graded"; match: QuestionMatch; result: QuestionResult }
+  /** Question submitted with no attempt — show how the marks are awarded. */
+  | { mode: "modelAnswer"; match: QuestionMatch; parts: QuestionPart[] }
   | { mode: "explained"; notes: NoteMatch[] }
   | { mode: "ocrFailed"; message: string }
   | { mode: "empty" };
@@ -129,10 +133,19 @@ export default function GraderPage() {
 
     const match = findQuestionMatch(combined);
     if (match) {
-      // Case 1 — mark ONLY the parts the student actually asked about.
-      // Marking every part of the stored question scored them against work
-      // they never attempted and made one answer look like several.
+      // Mark ONLY the parts the student actually asked about. Marking every
+      // part of the stored question scored them against work they never
+      // attempted and made one answer look like several.
       const parts = selectRelevantParts(match.question, combined);
+
+      // Question submitted with no attempt: marking it would report 0 for
+      // every scheme point, which tells the student nothing. Show the model
+      // answer and the mark allocation instead.
+      if (!hasAttempt(match.question, combined)) {
+        setOutcome({ mode: "modelAnswer", match, parts });
+        return;
+      }
+
       const answers: Record<string, string> = {};
       for (const part of parts) answers[part.ref] = combined;
       setOutcome({
@@ -440,6 +453,79 @@ export default function GraderPage() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Question only: show how the marks are awarded ─────────── */}
+      {outcome?.mode === "modelAnswer" && (
+        <section className="overflow-hidden rounded-3xl border border-teal-700/15 bg-white/95 shadow-xl backdrop-blur dark:border-white/20 dark:bg-white/10">
+          <div className="bg-gradient-to-r from-[#14343f] to-teal-800 px-6 py-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+              {t("modelTitle")}
+            </h2>
+            <p className="text-[11px] text-teal-100">
+              {t("markedAgainst")}: {outcome.match.question.session} · Q
+              {outcome.match.question.number} — {t("modelSubtitle")}
+            </p>
+          </div>
+
+          <div className="space-y-6 px-6 py-5">
+            {outcome.parts.map((part) => (
+              <div key={part.ref}>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-bold text-teal-700 dark:text-teal-200">
+                    {part.ref}
+                  </span>
+                  <p className="flex-1 text-sm text-[#14343f]/85 dark:text-slate-200">
+                    {part.prompt}
+                  </p>
+                  <span className="shrink-0 rounded-full bg-teal-700/15 px-2.5 py-0.5 text-xs font-bold text-teal-800 dark:bg-white/15 dark:text-teal-100">
+                    [{part.marks}]
+                  </span>
+                </div>
+
+                {part.note && (
+                  <p className="mt-1 text-xs italic text-[#14343f]/70 dark:text-slate-300">
+                    {part.note}
+                  </p>
+                )}
+
+                <ol className="mt-3 space-y-2">
+                  {part.points.map((p, i) => (
+                    <li
+                      key={i}
+                      className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="mt-0.5 shrink-0 rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                          {p.marks}M
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm leading-relaxed text-[#14343f] dark:text-slate-100">
+                            {p.text}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {p.require.map((group, gi) => (
+                              <span
+                                key={gi}
+                                className="rounded-md bg-teal-700/15 px-2 py-0.5 text-xs font-medium text-teal-900 dark:bg-white/15 dark:text-teal-50"
+                              >
+                                {group.slice(0, 3).join(" / ")}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+
+            <p className="rounded-xl bg-teal-700/5 px-4 py-3 text-xs text-[#14343f]/80 dark:bg-white/5 dark:text-slate-300">
+              {t("modelHint")}
+            </p>
           </div>
         </section>
       )}

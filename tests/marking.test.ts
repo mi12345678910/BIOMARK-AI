@@ -208,5 +208,49 @@ check(
   null,
 );
 
+// ── Question-only submissions must never be marked 0 ──────────────────────
+const { hasAttempt } = await import("../src/lib/lookup.ts");
+
+const questionOnly =
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice.";
+const qOnlyMatch = findQuestionMatch(questionOnly)!;
+check(
+  "question pasted alone is NOT treated as an attempt",
+  hasAttempt(qOnlyMatch.question, questionOnly),
+  false,
+);
+
+// Same question plus working — that IS an attempt.
+check(
+  "question + numeric working IS an attempt",
+  hasAttempt(qOnlyMatch.question, `${questionOnly} q = 0.6, p = 0.4, black = 0.64`),
+  true,
+);
+
+// A purely numeric answer must still register: tokenise drops decimals, so
+// this relies on the separate numeric check.
+check(
+  "bare numeric answer counts as an attempt",
+  hasAttempt(qOnlyMatch.question, `${questionOnly} 0.6 0.4 0.64`),
+  true,
+);
+
+// Prose answer with no new numbers must also register.
+check(
+  "prose answer counts as an attempt",
+  hasAttempt(
+    qOnlyMatch.question,
+    `${questionOnly} The heterozygous carriers must also be included when counting the dominant phenotype.`,
+  ),
+  true,
+);
+
+// The question-only path must still identify the right parts to explain.
+check(
+  "question-only still resolves the right part",
+  selectRelevantParts(qOnlyMatch.question, questionOnly).map((p) => p.ref),
+  ["(b)"],
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

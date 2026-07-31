@@ -106,6 +106,40 @@ export function bestPartFor(
 }
 
 /**
+ * Did the student actually attempt an answer, or just submit the question?
+ *
+ * A question pasted (or photographed) on its own must not be marked: every
+ * scheme point would fail and the student would be told 0/3 for asking a
+ * question. Instead they should be shown how the marks are awarded.
+ *
+ * Two independent signals of an attempt, either is enough:
+ *  - words that are not in the question itself, i.e. they wrote something new
+ *  - numbers that are not in the question, i.e. they calculated something
+ *
+ * The numeric check matters because `tokenise` drops decimals ("0.64" has no
+ * token longer than two characters), so a purely numeric answer would
+ * otherwise look like no attempt at all.
+ */
+export function hasAttempt(question: Structured, text: string): boolean {
+  const questionText = [
+    question.intro ?? "",
+    ...question.parts.map((p) => p.prompt),
+  ].join(" ");
+
+  const questionTerms = new Set(tokenise(questionText));
+  const newWords = new Set(
+    tokenise(text).filter((t) => !questionTerms.has(t)),
+  );
+  if (newWords.size >= 3) return true;
+
+  const numbersIn = (s: string) => s.match(/\d+(?:\.\d+)?/g) ?? [];
+  const questionNumbers = new Set(numbersIn(questionText));
+  const newNumbers = numbersIn(text).filter((n) => !questionNumbers.has(n));
+
+  return newNumbers.length > 0;
+}
+
+/**
  * The parts of a stored question the student actually asked about.
  *
  * A past-year question usually has several parts, and a student submits one of
