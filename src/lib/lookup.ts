@@ -192,7 +192,17 @@ export interface NoteMatch {
  * the learning-outcome line weighted heavily — a term appearing in the outcome
  * is a much stronger topic signal than one buried in a bullet.
  */
-export function searchNotes(text: string, limit = 3): NoteMatch[] {
+export function searchNotes(
+  text: string,
+  limit = 3,
+  /**
+   * When the submission matched a bank question we already know its chapter.
+   * Sections from that chapter are strongly preferred — shared vocabulary
+   * across chapters (allele, frequency, dominant) otherwise pulls in material
+   * from an unrelated topic, which reads as a misunderstanding.
+   */
+  preferChapter?: number,
+): NoteMatch[] {
   const terms = [...new Set(tokenise(text))];
   if (!terms.length) return [];
 
@@ -215,9 +225,20 @@ export function searchNotes(text: string, limit = 3): NoteMatch[] {
 
     if (score > 0) {
       // Normalise so a long section isn't favoured purely for being long.
-      scored.push({ section, score: score / Math.sqrt(terms.length), matchedTerms });
+      let final = score / Math.sqrt(terms.length);
+      if (preferChapter !== undefined && section.chapter === preferChapter) {
+        final *= 2;
+      }
+      scored.push({ section, score: final, matchedTerms });
     }
   }
 
-  return scored.sort((a, b) => b.score - a.score).slice(0, limit);
+  const ranked = scored.sort((a, b) => b.score - a.score).slice(0, limit);
+  if (ranked.length === 0) return ranked;
+
+  // Drop trailing weak matches. Without this, asking for 2 results always
+  // returns 2 — the second often being an unrelated chapter that happens to
+  // share a common word, which reads as if the app misunderstood the question.
+  const top = ranked[0]!.score;
+  return ranked.filter((r) => r.score >= top * 0.55);
 }

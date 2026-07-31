@@ -106,6 +106,11 @@ const STRINGS = {
     ocrEmpty: "(nothing readable found in this image)",
     ocrFailed: "Could not read the photos.",
 
+    whyTitle: "Why you lost those marks",
+    whySubtitle:
+      "From your lecturer's notes, on the exact concepts behind the scheme points you missed.",
+    fullMarksNote: "Full marks — every scheme point covered. Nothing missed.",
+
     modelTitle: "How this question is marked",
     modelSubtitle: "you submitted the question without an answer",
     modelHint:
@@ -228,6 +233,11 @@ const STRINGS = {
     ocrLow: "— keyakinan rendah, sila semak",
     ocrEmpty: "(tiada teks boleh dibaca dalam imej ini)",
     ocrFailed: "Tidak dapat membaca foto.",
+
+    whyTitle: "Mengapa markah itu hilang",
+    whySubtitle:
+      "Daripada nota pensyarah anda, tentang konsep tepat di sebalik mata skema yang tertinggal.",
+    fullMarksNote: "Markah penuh — semua mata skema dipenuhi. Tiada yang tertinggal.",
 
     modelTitle: "Bagaimana soalan ini ditanda",
     modelSubtitle: "anda hantar soalan tanpa jawapan",

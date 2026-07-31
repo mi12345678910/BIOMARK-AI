@@ -29,7 +29,13 @@ interface Attachment {
 }
 
 type Outcome =
-  | { mode: "graded"; match: QuestionMatch; result: QuestionResult }
+  | {
+      mode: "graded";
+      match: QuestionMatch;
+      result: QuestionResult;
+      /** Lecturer-notes material covering whatever they got wrong. */
+      notes: NoteMatch[];
+    }
   /** Question submitted with no attempt — show how the marks are awarded. */
   | { mode: "modelAnswer"; match: QuestionMatch; parts: QuestionPart[] }
   | { mode: "explained"; notes: NoteMatch[] }
@@ -148,10 +154,23 @@ export default function GraderPage() {
 
       const answers: Record<string, string> = {};
       for (const part of parts) answers[part.ref] = combined;
+      const result = markQuestion(parts, answers);
+
+      // Explain what went wrong, not just that it did. Search the notes using
+      // the scheme points they missed, so the material is about the specific
+      // concept behind the lost marks rather than the topic in general.
+      const missedText = result.parts
+        .flatMap((pr) => pr.results.filter((r) => !r.earned))
+        .map((r) => `${r.point.text} ${r.missingGroups.flat().join(" ")}`)
+        .join(" ");
+
       setOutcome({
         mode: "graded",
         match,
-        result: markQuestion(parts, answers),
+        result,
+        notes: missedText.trim()
+          ? searchNotes(missedText, 2, match.chapterNumber)
+          : [],
       });
       return;
     }
@@ -453,6 +472,53 @@ export default function GraderPage() {
                 )}
               </div>
             ))}
+
+            {/* Why the lost marks were lost — the lecturer's own material on
+                the concepts behind the missed scheme points. */}
+            {outcome.notes.length > 0 && (
+              <div className="border-t border-teal-700/15 pt-5 dark:border-white/15">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+                  {t("whyTitle")}
+                </h3>
+                <p className="mt-1 text-xs text-[#14343f]/75 dark:text-slate-300">
+                  {t("whySubtitle")}
+                </p>
+
+                <div className="mt-3 space-y-4">
+                  {outcome.notes.map((n, i) => (
+                    <article
+                      key={i}
+                      className="rounded-2xl border border-teal-700/15 bg-teal-700/5 p-4 dark:border-white/15 dark:bg-white/5"
+                    >
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+                        {t("pickChapter")} {n.section.chapter} ·{" "}
+                        {lang === "bm" ? n.section.chapterBm : n.section.chapterEn}
+                      </p>
+                      <h4 className="mt-1 text-sm font-bold text-[#14343f] dark:text-white">
+                        {n.section.outcome}
+                      </h4>
+                      <ul className="mt-2 space-y-1.5">
+                        {n.section.content.slice(0, 6).map((c, ci) => (
+                          <li
+                            key={ci}
+                            className="flex gap-2 text-sm leading-relaxed text-[#14343f]/90 dark:text-slate-100"
+                          >
+                            <span className="text-teal-600 dark:text-teal-300">•</span>
+                            <span>{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {outcome.result.awarded === outcome.result.maximum && (
+              <p className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                {t("fullMarksNote")}
+              </p>
+            )}
           </div>
         </section>
       )}

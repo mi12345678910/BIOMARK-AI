@@ -252,5 +252,52 @@ check(
   ["(b)"],
 );
 
+// ── Wrong answers get an explanation, and it stays on topic ───────────────
+const wrong =
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). 36% have white coats. Calculate the phenotype frequency of black coat mice. My answer: q = 0.6, p = 0.4, black coat = p2 = 0.16";
+const wrongMatch = findQuestionMatch(wrong)!;
+const wrongParts = selectRelevantParts(wrongMatch.question, wrong);
+const wrongResult = markQuestion(wrongParts, { [wrongParts[0].ref]: wrong });
+
+check("partially wrong answer is still marked", wrongResult.awarded, 2);
+
+const missedPoints = wrongResult.parts.flatMap((pr) =>
+  pr.results.filter((r) => !r.earned),
+);
+check("the wrong point is identified", missedPoints.length, 1);
+
+const explanation = searchNotes(
+  missedPoints
+    .map((r) => `${r.point.text} ${r.missingGroups.flat().join(" ")}`)
+    .join(" "),
+  2,
+  wrongMatch.chapterNumber,
+);
+check("a wrong answer yields explanatory notes", explanation.length > 0, true);
+check(
+  "explanation stays in the right chapter",
+  [...new Set(explanation.map((n) => n.section.chapter))],
+  [5],
+);
+
+// Weak trailing matches must be dropped rather than padded to the limit.
+const focused = searchNotes("leptotene zygotene pachytene chiasmata", 3);
+check(
+  "weak matches are filtered out, not padded",
+  [...new Set(focused.map((n) => n.section.chapter))],
+  [3],
+);
+
+// A fully correct answer needs no explanation section.
+const rightResult = markQuestion(wrongParts, {
+  [wrongParts[0].ref]:
+    "q = 0.6, p = 0.4, genotype frequency for black coat = p2 + 2pq = 0.64",
+});
+check(
+  "a full-marks answer leaves nothing to explain",
+  rightResult.parts.flatMap((pr) => pr.results.filter((r) => !r.earned)).length,
+  0,
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
