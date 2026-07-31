@@ -26,7 +26,7 @@ export default function Navbar() {
             <span className="text-base font-bold tracking-tight text-[#14343f] dark:text-white">
               BioMark <span className="text-coral-500">AI</span>
             </span>
-            <span className="text-[10px] font-medium text-[#14343f]/50 dark:text-slate-400">
+            <span className="text-[10px] font-medium text-[#14343f]/65 dark:text-slate-400">
               {t("tagline")}
             </span>
           </span>
@@ -65,7 +65,7 @@ export default function Navbar() {
               className={`px-3 py-1.5 text-xs font-bold tracking-wide transition ${
                 lang === code
                   ? "bg-coral-500 text-white"
-                  : "text-[#14343f]/50 hover:bg-white/70 dark:text-slate-400 dark:hover:bg-white/10"
+                  : "text-[#14343f]/65 hover:bg-white/70 dark:text-slate-400 dark:hover:bg-white/10"
               }`}
             >
               {code.toUpperCase()}

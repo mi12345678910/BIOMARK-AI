@@ -100,5 +100,39 @@ check(
   [10, 14, 7],
 );
 
+// ── Bank integrity: a perfect answer must score full marks ────────────────
+//
+// Feeding every scheme point's own text back in as the student's answer is a
+// strong check on the `require` keyword lists: if a keyword is misspelled or
+// refers to a term the scheme line doesn't actually contain, the point cannot
+// be earned and this test catches it. Runs across every part in the bank.
+const brokenParts: string[] = [];
+for (const ch of CHAPTERS) {
+  for (const q of ch.structured) {
+    for (const part of q.parts) {
+      const perfect = part.points.map((p) => p.text).join(". ");
+      const r = markPart(part, perfect);
+      if (r.awarded !== r.maximum) {
+        brokenParts.push(
+          `${q.id} ${part.ref} scored ${r.awarded}/${r.maximum} — unearned: ` +
+            r.results
+              .filter((x) => !x.earned)
+              .map((x) => x.missingGroups.map((g) => g[0]).join("+"))
+              .join(" | "),
+        );
+      }
+    }
+  }
+}
+if (brokenParts.length) brokenParts.forEach((b) => console.log(`  ! ${b}`));
+check("every part reaches full marks on a perfect answer", brokenParts.length, 0);
+
+// ── Bank size, so accidental deletions are noticed ────────────────────────
+check(
+  "structured question counts (Ch3/Ch4/Ch5)",
+  CHAPTERS.map((c) => c.structured.length),
+  [2, 0, 15],
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

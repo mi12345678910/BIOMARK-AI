@@ -18,7 +18,17 @@
   --color-coral-600: #d15841;
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+ * NOTE: do not add `@custom-variant dark (&:where(.dark, .dark *))` here.
+ *
+ * That redefines `dark:` to be class-based, and nothing in this app ever puts
+ * a `.dark` class on <html>. The body rule below still flipped the background
+ * dark via prefers-color-scheme, so the page rendered with a dark background
+ * and every `dark:text-*` utility inert — dark text on a dark background.
+ *
+ * Tailwind v4's built-in `dark:` already follows prefers-color-scheme, which
+ * matches the media query below. Leaving it alone is the fix.
+ */
 
 html {
   scroll-behavior: smooth;

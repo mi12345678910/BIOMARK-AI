@@ -781,6 +781,730 @@ const CH5: Chapter = {
         },
       ],
     },
+
+    {
+      id: "c5-ups2-2006",
+      session: "UPS II 2006/2007",
+      number: "2",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "State TWO assumptions of the Hardy-Weinberg Law for genetic equilibrium.",
+          marks: 2,
+          anyOf: 2,
+          points: HW_CONDITIONS,
+          note: "Scheme: any 2.",
+        },
+        {
+          ref: "(b)(i)",
+          prompt:
+            "In a population, 14% of babies are born with albinism. Calculate the frequency of the recessive allele.",
+          marks: 1,
+          points: [
+            {
+              text: "q² = 14/100 = 0.14, so q = √0.14 = 0.37",
+              marks: 1,
+              require: [["0.37"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)(ii)",
+          prompt: "Calculate the frequency of the dominant allele.",
+          marks: 1,
+          points: [
+            {
+              text: "p + q = 1, so p = 1 − 0.37 = 0.63",
+              marks: 1,
+              require: [["0.63"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)(i)",
+          prompt:
+            "In a population of 1200 students, only 200 have a dimple (a dominant trait). Calculate the allele frequency of the students with dimples.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of homozygous recessive genotype, q² = 1000/1200 = 0.833; q = 0.913",
+              marks: 1,
+              require: [["0.913", "0.91"]],
+            },
+            {
+              text: "p + q = 1, so frequency of dominant allele, p = 0.087",
+              marks: 1,
+              require: [["0.087", "0.09"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)(ii)",
+          prompt: "Determine the number of students who are heterozygous for this trait.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of heterozygous genotype, 2pq = 2(0.087)(0.913) = 0.159",
+              marks: 1,
+              require: [["0.159", "0.16"]],
+            },
+            {
+              text: "Number of heterozygous students = 0.159 × 1200 = 191 students",
+              marks: 1,
+              require: [["191"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)(iii)",
+          prompt:
+            "If two heterozygous individuals for this trait marry, what is the probability of having a child who is homozygous dominant?",
+          marks: 2,
+          points: [
+            {
+              text: "1/4",
+              marks: 2,
+              require: [["1/4", "0.25", "25"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-ups2-2007",
+      session: "UPS II 2007/2008",
+      number: "3",
+      intro:
+        "Fur colour in a small mammal is controlled by a pair of alleles, B for black and b for yellow. 60 individuals have yellow fur and 1440 have black fur, of which 960 are pure-breeding.",
+      parts: [
+        {
+          ref: "(b)(i)",
+          prompt: "State the Hardy-Weinberg Law.",
+          marks: 1,
+          points: [HW_LAW_POINT],
+        },
+        {
+          ref: "(b)(ii)",
+          prompt: "Calculate the total number of B and b alleles.",
+          marks: 2,
+          points: [
+            {
+              text: "Heterozygous individuals, Bb = 1440 − 960 = 480. Total allele B = (2 × 960) + 480 = 2400",
+              marks: 1,
+              require: [["2400"]],
+            },
+            {
+              text: "Total allele b = (2 × 60) + 480 = 600",
+              marks: 1,
+              require: [["600"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)(iii)",
+          prompt:
+            "If sexual reproduction occurs at random, calculate the frequency of the yellow fur phenotype in the next generation.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of recessive allele, q = 600/3000 = 0.2",
+              marks: 1,
+              require: [["0.2"]],
+            },
+            {
+              text: "Frequency of yellow fur, q² = (0.2)² = 0.04   [or 60/1500 = 0.04]",
+              marks: 1,
+              require: [["0.04"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-ups2-2008",
+      session: "UPS II 2008/2009",
+      number: "4",
+      intro:
+        "In a population of 700 hamsters, 543 have black fur. The allele for black fur B is dominant over white fur b.",
+      parts: [
+        {
+          ref: "(b)(i)",
+          prompt: "State TWO conditions where Hardy-Weinberg equilibrium applies.",
+          marks: 2,
+          anyOf: 2,
+          points: HW_CONDITIONS,
+          note: "Scheme: any 2.",
+        },
+        {
+          ref: "(b)(ii)",
+          prompt: "Calculate the genotype frequency of heterozygous hamsters in this population.",
+          marks: 3,
+          points: [
+            {
+              text: "Homozygous recessive individuals, bb = 700 − 543 = 157; q² = 157/700 = 0.22, so q = 0.47",
+              marks: 1,
+              require: [["0.47"]],
+            },
+            {
+              text: "p + q = 1, so frequency of dominant allele, p = 0.53",
+              marks: 1,
+              require: [["0.53"]],
+            },
+            {
+              text: "Genotype frequency of heterozygous hamsters, 2pq = 2(0.53)(0.47) = 0.5 (0.498)",
+              marks: 1,
+              require: [["0.498", "0.5"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm2-2009",
+      session: "PSPM II 2009/2010",
+      number: "6",
+      intro:
+        "TABLE 1 shows a genetic population study on Drosophila. Normal wing (L) is dominant over vestigial wing (l). Normal wing: 400. Vestigial wing: 64.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "What is the frequency of allele L and allele l?",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of vestigial wing (ll), q² = 64/464 = 0.14, so q = 0.37",
+              marks: 1,
+              require: [["0.37"]],
+            },
+            {
+              text: "p + q = 1, so frequency of allele L, p = 0.63",
+              marks: 1,
+              require: [["0.63"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "How many heterozygous Drosophila have normal wings? Show the calculation.",
+          marks: 3,
+          points: [
+            {
+              text: "Frequency of heterozygous genotype, 2pq = 2(0.63)(0.37) = 0.47",
+              marks: 1,
+              require: [["0.47"]],
+            },
+            {
+              text: "Number of heterozygous normal wing = 0.47 × 464 = 218",
+              marks: 2,
+              require: [["218"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)(i)",
+          prompt:
+            "If all vestigial-winged Drosophila are removed, how many homozygous dominant are left?",
+          marks: 1,
+          points: [
+            {
+              text: "Number of homozygous dominant = 400 − 218 = 182",
+              marks: 1,
+              require: [["182"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)(ii)",
+          prompt: "Calculate the frequency of allele L and allele l in the new population.",
+          marks: 4,
+          points: [
+            {
+              text: "Frequency of allele L, p = [(182 × 2) + 218] / (400 × 2) = 0.73",
+              marks: 2,
+              require: [["0.73"]],
+            },
+            {
+              text: "Frequency of allele l, q = 218 / (400 × 2) = 0.27   [or 1 − 0.73 = 0.27]",
+              marks: 2,
+              require: [["0.27"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-ups2-2010",
+      session: "UPS II 2010/2011",
+      number: "7",
+      intro:
+        "For sheep, normal fur is controlled by a dominant allele (R) and non-uniform fur by a recessive allele (r). In a population of 2000 sheep that mate randomly, 500 have non-uniform fur.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "State the Hardy-Weinberg Law.",
+          marks: 1,
+          points: [HW_LAW_POINT],
+        },
+        {
+          ref: "(b)(i)",
+          prompt: "Calculate the frequency of the recessive allele in the population.",
+          marks: 1,
+          points: [
+            {
+              text: "Frequency of genotype rr, q² = 500/2000 = 0.25, so q = 0.5",
+              marks: 1,
+              require: [["0.5"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)(ii)",
+          prompt: "Calculate the frequency of the dominant allele in the population.",
+          marks: 1,
+          points: [
+            {
+              text: "p + q = 1, so frequency of dominant allele, p = 0.5",
+              marks: 1,
+              require: [["0.5"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)(iii)",
+          prompt: "Calculate the number of sheep with normal fur in the population.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of normal fur, p² + 2pq = 0.25 + 0.5 = 0.75   [or 1 − q² = 0.75]",
+              marks: 1,
+              require: [["0.75"]],
+            },
+            {
+              text: "Number of sheep with normal fur = 0.75 × 2000 = 1500",
+              marks: 1,
+              require: [["1500"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2011",
+      session: "PSPM I 2011/2012",
+      number: "8",
+      intro:
+        "Thalassemia is an autosomal recessive blood disease. Thalassemia major is the homozygous recessive condition; thalassemia minor is the heterozygous condition. In a population of 12,750, two individuals suffer from thalassemia major.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt:
+            "Determine the frequencies of the dominant and recessive alleles in the population. Calculate to five decimal places.",
+          marks: 5,
+          points: [
+            {
+              text: "p² + 2pq + q² = 1 and p + q = 1",
+              marks: 1,
+              require: [["2pq", "p+q", "p + q"]],
+            },
+            {
+              text: "Frequency of homozygous recessive genotype, q² = 2/12750 = 0.00016",
+              marks: 1,
+              require: [["0.00016"]],
+            },
+            {
+              text: "Frequency of recessive allele, q = 0.01265",
+              marks: 1,
+              require: [["0.01265"]],
+            },
+            {
+              text: "Frequency of dominant allele, p = 1 − q = 0.98735",
+              marks: 2,
+              require: [["0.98735"]],
+            },
+          ],
+          note: "Scheme requires five decimal places.",
+        },
+        {
+          ref: "(b)",
+          prompt: "How many individuals would suffer from thalassemia minor in the population?",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of heterozygous genotype, 2pq = 2(0.98735)(0.01265) = 0.02498",
+              marks: 1,
+              require: [["0.02498"]],
+            },
+            {
+              text: "Number with thalassemia minor = 0.02498 × 12750 = 318 individuals",
+              marks: 1,
+              require: [["318"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt:
+            "If 1,000 normal individuals migrate out of the population, what are the new frequencies of the dominant and recessive alleles?",
+          marks: 3,
+          points: [
+            {
+              text: "Normal individuals = 12750 − 318 − 2 = 12430; after emigration 12430 − 1000 = 11430",
+              marks: 1,
+              require: [["11430"]],
+            },
+            {
+              text: "New frequency of dominant allele = [(11430 × 2) + 318] / (11750 × 2) = 0.98630",
+              marks: 1,
+              require: [["0.98630", "0.9863"]],
+            },
+            {
+              text: "New frequency of recessive allele = [318 + (2 × 2)] / (11750 × 2) = 0.01370",
+              marks: 1,
+              require: [["0.01370", "0.0137"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2014",
+      session: "PSPM I 2014/2015",
+      number: "9",
+      intro:
+        "Body colour in fruit flies is controlled by a pair of alleles: grey (E) is dominant over ebony (e). In a population of 2000 fruit flies, 320 have ebony bodies. Assume Hardy-Weinberg equilibrium.",
+      parts: [
+        {
+          ref: "(b)(i)",
+          prompt: "State the Hardy-Weinberg equation.",
+          marks: 1,
+          points: [
+            {
+              text: "p² + 2pq + q² = 1 and p + q = 1",
+              marks: 1,
+              require: [["2pq", "p+q", "p + q"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)(ii)",
+          prompt: "Calculate the frequencies of the E and e alleles.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of homozygous recessive genotype (ee), q² = 320/2000 = 0.16, so q = 0.4",
+              marks: 1,
+              require: [["0.4"]],
+            },
+            {
+              text: "Frequency of allele E, p = 1 − 0.4 = 0.6",
+              marks: 1,
+              require: [["0.6"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)(iii)",
+          prompt: "Calculate the number of heterozygous individuals.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of heterozygous individuals, 2pq = 2(0.6)(0.4) = 0.48",
+              marks: 1,
+              require: [["0.48"]],
+            },
+            {
+              text: "Number of heterozygous individuals = 0.48 × 2000 = 960",
+              marks: 1,
+              require: [["960"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2016",
+      session: "PSPM I 2016/2017",
+      number: "10",
+      intro:
+        "A farmer has 2000 cows: 1500 are brown coated and the rest white coated. Allele B (brown) is dominant, allele b (white) is recessive. Assume genetic equilibrium and random breeding.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Calculate the frequency of the dominant and recessive alleles.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of white coat cows, q² = 500/2000 = 0.25, so q = 0.5",
+              marks: 1,
+              require: [["0.5"]],
+            },
+            {
+              text: "p + q = 1, so frequency of dominant allele, p = 0.5",
+              marks: 1,
+              require: [["0.5"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt:
+            "Calculate the genotype frequencies in the F1 generation if the cows breed randomly.",
+          marks: 3,
+          points: [
+            { text: "Frequency of BB, p² = (0.5)² = 0.25", marks: 1, require: [["0.25"]] },
+            { text: "Frequency of Bb, 2pq = 2(0.5)(0.5) = 0.5", marks: 1, require: [["0.5"]] },
+            { text: "Frequency of bb, q² = (0.5)² = 0.25", marks: 1, require: [["0.25"]] },
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt:
+            "If the farmer adds another 1000 homozygous dominant brown cows, calculate the new dominant allele frequency.",
+          marks: 2,
+          points: [
+            {
+              text: "Total dominant alleles originally = 0.5 × 4000 = 2000; new total = 2000 + 2(1000) = 4000",
+              marks: 1,
+              require: [["4000"]],
+            },
+            {
+              text: "New frequency of dominant allele = 4000 / (3000 × 2) = 0.667",
+              marks: 1,
+              require: [["0.667", "0.67"]],
+            },
+          ],
+        },
+        {
+          ref: "(d)",
+          prompt: "State THREE conditions for Hardy-Weinberg equilibrium to be achieved.",
+          marks: 3,
+          anyOf: 3,
+          points: HW_CONDITIONS,
+          note: "Scheme: any 3.",
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2018",
+      session: "PSPM I 2018/2019",
+      number: "11",
+      parts: [
+        {
+          ref: "(a)",
+          prompt:
+            "In a population of 13000 wild chickens, 16% have short legs (a recessive trait). Assuming Hardy-Weinberg equilibrium, how many wild chickens are heterozygotes in the next generation if the population increases to 15000?",
+          marks: 7,
+          points: [
+            {
+              text: "p = frequency of the dominant allele and q = frequency of the recessive allele (short leg)",
+              marks: 1,
+              require: [
+                ["dominant"],
+                ["recessive"],
+              ],
+            },
+            {
+              text: "Frequency of short leg / homozygous recessive, q² = 0.16 (16/100)",
+              marks: 1,
+              require: [["0.16"]],
+            },
+            {
+              text: "Frequency of recessive allele, q = √0.16 = 0.4",
+              marks: 2,
+              require: [["0.4"]],
+            },
+            {
+              text: "p + q = 1, so frequency of dominant allele, p = 1 − 0.4 = 0.6",
+              marks: 1,
+              require: [["0.6"]],
+            },
+            {
+              text: "Frequency of heterozygote, 2pq = 2(0.6)(0.4) = 0.48",
+              marks: 1,
+              require: [["0.48"]],
+            },
+            {
+              text: "Number of heterozygotes in the next generation = 0.48 × 15000 = 7200",
+              marks: 1,
+              require: [["7200"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2022",
+      session: "PSPM I 2022/2023",
+      number: "13",
+      intro:
+        "One in 3600 people inherits Tay-Sachs disease, an autosomal recessive disorder. Assume Hardy-Weinberg equilibrium. All calculations to 4 decimal places.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Calculate the percentage of dominant homozygous individuals.",
+          marks: 4,
+          points: [
+            {
+              text: "Frequency of Tay-Sachs / homozygous recessive, q² = 1/3600 = 0.0003",
+              marks: 1,
+              require: [["0.0003"]],
+            },
+            {
+              text: "Frequency of recessive allele, q = 0.0173",
+              marks: 1,
+              require: [["0.0173"]],
+            },
+            {
+              text: "Frequency of dominant allele, p = 1 − 0.0173 = 0.9827",
+              marks: 1,
+              require: [["0.9827"]],
+            },
+            {
+              text: "Percentage of homozygous dominant = 0.9657 × 100 = 96.57%",
+              marks: 1,
+              require: [["96.57", "0.9657"]],
+            },
+          ],
+          note: "Scheme requires four decimal places.",
+        },
+        {
+          ref: "(b)",
+          prompt: "Calculate the percentage of heterozygous individuals.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of heterozygous, 2pq = 2 × 0.9827 × 0.0173 = 0.0340",
+              marks: 1,
+              // Both forms: the scheme prints 0.0340, students usually write
+              // 0.034, and neither matches the other under numeric boundaries.
+              require: [["0.0340", "0.034"]],
+            },
+            {
+              text: "Percentage of heterozygous individuals = 0.0340 × 100 = 3.4%",
+              marks: 1,
+              require: [["3.4"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2023",
+      session: "PSPM I 2023/2024",
+      number: "14",
+      intro:
+        "In a population of 6000 wolves, 26 are albino. The allele for albino (a) is recessive to normal fur colour (A). Assume Hardy-Weinberg equilibrium. Answer to three decimal places.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Calculate the allele frequencies for A and a. Show your calculation.",
+          marks: 4,
+          points: [
+            {
+              text: "Frequency of homozygous recessive genotype, q² = 26/6000 = 0.004",
+              marks: 1,
+              require: [["0.004"]],
+            },
+            {
+              text: "Frequency of recessive allele, q = √0.004 = 0.063",
+              marks: 2,
+              require: [["0.063"]],
+            },
+            {
+              text: "Frequency of dominant allele, p = 1 − 0.063 = 0.937",
+              marks: 1,
+              require: [["0.937"]],
+            },
+          ],
+          note: "Scheme requires three decimal places.",
+        },
+        {
+          ref: "(b)",
+          prompt:
+            "Calculate the genotype frequency for wolves with normal fur colour which are carriers.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of carrier / heterozygous genotype, 2pq = 2 × 0.937 × 0.063 = 0.118",
+              marks: 2,
+              require: [["0.118"]],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c5-pspm1-2024",
+      session: "PSPM I 2024/2025",
+      number: "15",
+      intro:
+        "In a population of 10000, 2 individuals were born with a severe form of anaemia. Assume Hardy-Weinberg equilibrium.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "State the Hardy-Weinberg equation.",
+          marks: 1,
+          points: [
+            {
+              text: "p² + 2pq + q² = 1 // p + q = 1",
+              marks: 1,
+              require: [["2pq", "p+q", "p + q"]],
+            },
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt:
+            "Determine the frequency of the dominant and recessive alleles in the population.",
+          marks: 3,
+          points: [
+            {
+              text: "Frequency of homozygous recessive genotype, q² = 2/10000 = 0.0002",
+              marks: 1,
+              require: [["0.0002"]],
+            },
+            {
+              text: "Frequency of recessive allele, q = √0.0002 = 0.014 (0.0141)",
+              marks: 1,
+              require: [["0.0141", "0.014"]],
+            },
+            {
+              text: "Frequency of dominant allele, p = 1 − q = 0.986 (0.9859)",
+              marks: 1,
+              require: [["0.9859", "0.986"]],
+            },
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "Calculate the number of heterozygotes.",
+          marks: 2,
+          points: [
+            {
+              text: "Frequency of heterozygote, 2pq = 2 × 0.986 × 0.014 = 0.028 (0.0278)",
+              marks: 1,
+              require: [["0.0278", "0.028"]],
+            },
+            {
+              text: "Number of heterozygotes = 0.028 × 10000 = 280 (276 // 278)",
+              marks: 1,
+              require: [["280", "278", "276"]],
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 

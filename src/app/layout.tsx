@@ -29,7 +29,7 @@ export default function RootLayout({
           <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-5xl px-4 py-10 sm:px-6">
             {children}
           </main>
-          <footer className="border-t border-teal-900/10 py-7 text-center text-xs text-[#14343f]/45 dark:border-white/10 dark:text-slate-500">
+          <footer className="border-t border-teal-900/10 py-7 text-center text-xs text-[#14343f]/65 dark:border-white/10 dark:text-slate-300">
             BioMark AI · Marks are indicative — always confirm against your
             lecturer&rsquo;s official scheme
           </footer>

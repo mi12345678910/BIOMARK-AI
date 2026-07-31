@@ -21,16 +21,16 @@ const STRINGS = {
     heroTitleA: "Matriculation Biology,",
     heroTitleB: "marked in seconds.",
     heroBody:
-      "Paste your question and answer into one box. BioMark AI figures out the question type, rebuilds the marking scheme, awards the marks, and shows you exactly which keyword cost you each one.",
+      "Real past-year PSPM questions, marked against the official KPM scheme. Write your answer and see which keyword earned or cost you each mark — instantly, and with no account to create.",
     heroCtaGrade: "Mark my answer",
     heroCtaQuiz: "Practise a topic",
 
     cardGraderTitle: "Auto-Grader",
     cardGraderBody:
-      "One box. Paste typed work or snap a photo of your handwriting — marks and explanation come back instantly.",
+      "Answer a past-year structured question and get a point-by-point breakdown against the official scheme.",
     cardQuizTitle: "Interactive Quiz",
     cardQuizBody:
-      "Practise any chapter with PSPM-standard questions, instant keyword feedback, and diagrams.",
+      "Work through real PSPM multiple-choice questions with the answer and explanation after each one.",
     cardCta: "Start",
 
     featureGradeTitle: "Marks the way PSPM does",
@@ -47,9 +47,9 @@ const STRINGS = {
     syllabusBody:
       "Cell Division · Genetic Inheritance · Population Genetics · Expression of Biological Information · Mutation · Recombinant DNA Technology · Reproduction & Development · and every Semester 2 chapter.",
 
-    graderTitle: "Paste it. Get it marked.",
+    graderTitle: "Answer it. See every mark.",
     graderSubtitle:
-      "Drop in the question and your answer. BioMark AI works out the question type, reconstructs the marking scheme, and marks it. Question only? You'll get a full explanation instead.",
+      "Pick a past-year question, write your answer, and BioMark AI marks it against the official KPM scheme — showing which keyword earned or cost you each mark.",
     pasteBoxTitle: "Your question and answer",
     pasteBoxPlaceholder:
       "Paste the question and your answer here.\n\nExample:\n\nQ: In a population of mice, 36% have white coats (recessive). Calculate the phenotype frequency of black-coated mice. [3 marks]\n\nMy answer: q² = 0.36 so q = 0.6. p = 1 − 0.6 = 0.4. Black coat = p² = 0.16\n\n— or paste just the question, and I'll explain how to answer it.",
@@ -125,16 +125,16 @@ const STRINGS = {
     heroTitleA: "Biologi Matrikulasi,",
     heroTitleB: "ditanda dalam beberapa saat.",
     heroBody:
-      "Tampal soalan dan jawapan anda dalam satu kotak. BioMark AI mengenal pasti jenis soalan, membina semula skema pemarkahan, memberi markah, dan menunjukkan kata kunci yang menyebabkan setiap markah hilang.",
+      "Soalan sebenar tahun lepas PSPM, ditanda mengikut skema rasmi KPM. Tulis jawapan anda dan lihat kata kunci yang memberi atau menghilangkan setiap markah — serta-merta, tanpa perlu daftar akaun.",
     heroCtaGrade: "Tanda jawapan saya",
     heroCtaQuiz: "Latih satu topik",
 
     cardGraderTitle: "Penanda Auto",
     cardGraderBody:
-      "Satu kotak. Tampal jawapan taip atau ambil foto tulisan tangan anda — markah dan penerangan diberi serta-merta.",
+      "Jawab soalan berstruktur tahun lepas dan dapatkan pecahan markah mata demi mata mengikut skema rasmi.",
     cardQuizTitle: "Kuiz Interaktif",
     cardQuizBody:
-      "Berlatih mana-mana bab dengan soalan standard PSPM, maklum balas kata kunci serta-merta, dan rajah.",
+      "Selesaikan soalan aneka pilihan PSPM sebenar dengan jawapan dan penerangan selepas setiap satu.",
     cardCta: "Mula",
 
     featureGradeTitle: "Menanda seperti PSPM",
@@ -151,9 +151,9 @@ const STRINGS = {
     syllabusBody:
       "Pembahagian Sel · Pewarisan Genetik · Genetik Populasi · Ekspresi Maklumat Biologi · Mutasi · Teknologi DNA Rekombinan · Pembiakan & Perkembangan · dan setiap bab Semester 2.",
 
-    graderTitle: "Tampal. Terus ditanda.",
+    graderTitle: "Jawab. Lihat setiap markah.",
     graderSubtitle:
-      "Masukkan soalan dan jawapan anda. BioMark AI mengenal pasti jenis soalan, membina semula skema pemarkahan, dan menandanya. Soalan sahaja? Anda akan dapat penerangan penuh.",
+      "Pilih soalan tahun lepas, tulis jawapan anda, dan BioMark AI menandanya mengikut skema rasmi KPM — menunjukkan kata kunci yang memberi atau menghilangkan setiap markah.",
     pasteBoxTitle: "Soalan dan jawapan anda",
     pasteBoxPlaceholder:
       "Tampal soalan dan jawapan anda di sini.\n\nContoh:\n\nS: Dalam populasi tikus, 36% berbulu putih (resesif). Hitung frekuensi fenotip tikus berbulu hitam. [3 markah]\n\nJawapan saya: q² = 0.36 jadi q = 0.6. p = 1 − 0.6 = 0.4. Bulu hitam = p² = 0.16\n\n— atau tampal soalan sahaja, dan saya akan terangkan cara menjawabnya.",

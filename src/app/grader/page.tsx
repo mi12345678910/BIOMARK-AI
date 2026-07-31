@@ -144,7 +144,7 @@ export default function GraderPage() {
                   </span>
                 </div>
                 {part.note && (
-                  <p className="mt-1 text-xs italic text-[#14343f]/45 dark:text-slate-500">
+                  <p className="mt-1 text-xs italic text-[#14343f]/65 dark:text-slate-300">
                     {part.note}
                   </p>
                 )}
@@ -240,16 +240,34 @@ export default function GraderPage() {
                             )}
                           </p>
 
+                          {r.matched.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                                {t("youWrote")}
+                              </p>
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                {r.matched.map((k, ki) => (
+                                  <span
+                                    key={ki}
+                                    className="rounded-md bg-emerald-500/25 px-2 py-0.5 text-xs font-medium text-emerald-900 dark:text-emerald-100"
+                                  >
+                                    {k}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {!r.earned && r.missingGroups.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-[11px] font-bold uppercase tracking-wider text-[#14343f]/50 dark:text-slate-400">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-coral-700 dark:text-coral-300">
                                 {t("missingKeywords")}
                               </p>
                               <div className="mt-1 flex flex-wrap gap-1.5">
                                 {r.missingGroups.map((g, gi) => (
                                   <span
                                     key={gi}
-                                    className="rounded-md bg-coral-500/20 px-2 py-0.5 text-xs font-medium text-coral-700 dark:text-coral-200"
+                                    className="rounded-md bg-coral-500/25 px-2 py-0.5 text-xs font-medium text-coral-900 dark:text-coral-100"
                                   >
                                     {g.slice(0, 3).join(" / ")}
                                   </span>
@@ -264,7 +282,7 @@ export default function GraderPage() {
                 </ul>
 
                 {pr.cappedByAnyOf && (
-                  <p className="mt-2 text-xs italic text-[#14343f]/50 dark:text-slate-500">
+                  <p className="mt-2 text-xs italic text-[#14343f]/65 dark:text-slate-300">
                     {t("cappedNote")}
                   </p>
                 )}

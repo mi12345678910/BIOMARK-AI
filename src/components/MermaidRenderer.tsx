@@ -131,7 +131,7 @@ export default function MermaidRenderer({ code }: { code: string }) {
 
   if (!svg) {
     return (
-      <div className="my-4 flex h-28 animate-pulse items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500">
+      <div className="my-4 flex h-28 animate-pulse items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
         Drawing diagram…
       </div>
     );
