@@ -13,8 +13,18 @@ import { CHAPTERS, type Structured } from "../data/bank.ts";
 import { NOTES, type NoteSection } from "../data/notes.ts";
 import type { QuestionPart } from "./marking.ts";
 
-/** Words too common in biology questions to carry signal. */
+/**
+ * Words that carry no power to identify WHICH question is being asked.
+ *
+ * The second group matters as much as the first. Rarity alone marks a term as
+ * identifying, and words like "importance", "assumptions" and "law" happen to
+ * appear in only one or two stored prompts — so IDF scored them higher than
+ * "mice", and a student asking "what is the importance of the S phase?" was
+ * handed the mark scheme for a past-year figure question. They are exam
+ * phrasing, not data, and must never anchor a match.
+ */
 const STOP = new Set([
+  // structural
   "the", "a", "an", "of", "in", "on", "at", "to", "for", "and", "or", "is",
   "are", "was", "were", "be", "been", "this", "that", "these", "those", "it",
   "its", "as", "by", "with", "from", "which", "what", "how", "why", "state",
@@ -22,14 +32,86 @@ const STOP = new Set([
   "determine", "show", "your", "you", "my", "answer", "question", "marks",
   "mark", "following", "above", "below", "figure", "table", "shows", "shown",
   "if", "then", "than", "there", "their", "has", "have", "will", "can", "not",
+
+  // exam and syllabus phrasing — common to every paper, unique to none
+  "importance", "important", "significance", "significant",
+  "assumption", "assumptions", "condition", "conditions",
+  "law", "principle", "principles", "equation", "formula",
+  "stage", "stages", "phase", "phases", "step", "steps",
+  "event", "events", "occur", "occurs", "occurring",
+  "difference", "differences", "similarity", "similarities",
+  "role", "roles", "function", "functions", "process", "processes",
+  "individual", "individuals", "suffer", "suffering", "suffered",
+  "labelled", "labeled", "diagram", "based", "using", "used", "assume",
+
+  // connectives — "during" was scoring as an identifying term and matched
+  // "what happens during transcription?" to a cell-cycle question
+  "during", "when", "while", "where", "after", "before", "between",
+  "each", "both", "also", "such", "does", "happen", "happens", "into",
+  "about", "many", "much", "would", "were", "given", "below", "over",
 ]);
 
 export function tokenise(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 2 && !STOP.has(w));
+  return (
+    text
+      .toLowerCase()
+      // Thousands separators first: the bank stores "12,750" and "15 000" as
+      // printed, so without this they split into "12"/"750" and never match a
+      // student who typed "12750" — losing the very number that identifies
+      // the question.
+      .replace(/(\d)[,\s](\d{3})\b/g, "$1$2")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !STOP.has(w))
+  );
+}
+
+/* ── Term weighting ────────────────────────────────────────────────────── */
+
+/**
+ * How rare a term is across the whole bank (inverse document frequency).
+ *
+ * Counting matched terms equally was the bug behind canned schemes hijacking
+ * custom questions. Every Population Genetics prompt contains "frequency",
+ * "allele", "population" and "recessive", so ANY question on the topic matched
+ * two-thirds of a stored prompt and triggered its mark scheme — even though
+ * the terms that actually identify it ("albinism", "babies", "14") were absent.
+ *
+ * Weighting by rarity fixes that: the shared vocabulary counts for almost
+ * nothing and the distinctive nouns carry the match.
+ */
+const IDF: Map<string, number> = (() => {
+  const docs: string[][] = [];
+  for (const chapter of CHAPTERS) {
+    for (const q of chapter.structured) {
+      for (const part of q.parts) {
+        docs.push([...new Set(tokenise(`${q.intro ?? ""} ${part.prompt}`))]);
+      }
+    }
+  }
+
+  const seenIn = new Map<string, number>();
+  for (const doc of docs) {
+    for (const term of doc) seenIn.set(term, (seenIn.get(term) ?? 0) + 1);
+  }
+
+  const idf = new Map<string, number>();
+  for (const [term, count] of seenIn) {
+    // Squared, because plain IDF is too flat on a corpus this small: with 53
+    // documents "frequency" (in 16) scored 1.30 against "albinism" (in 1) at
+    // 4.07 — only 3× apart, so four generic terms outweighed a unique one.
+    // Squaring widens that to ~10× and lets the gate below actually separate
+    // a real identification from shared topic vocabulary.
+    const raw = Math.log(docs.length / count) + 0.1;
+    idf.set(term, raw * raw);
+  }
+  return idf;
+})();
+
+/** Unseen terms are maximally distinctive. */
+function weightOf(term: string): number {
+  const raw = Math.log(60) + 0.1;
+  return IDF.get(term) ?? raw * raw;
 }
 
 /* ── Case 1 — find a bankable question ─────────────────────────────────── */
@@ -61,32 +143,104 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
       // pastes a single part, so their text covers one prompt out of four and
       // the combined score never clears the threshold. The question is a match
       // if ANY of its parts is clearly the one being asked about.
-      let bestPartScore = 0;
+      const introTerms = [...new Set(tokenise(q.intro ?? ""))];
+
+      // Identification rests on DISTINCTIVE terms only — the species, traits
+      // and numbers unique to this paper. Shared topic vocabulary ("allele",
+      // "frequency", "population") is excluded entirely, because matching on
+      // it is exactly what let unrelated questions trigger a mark scheme.
+      //
+      // Scored per part, with the intro folded into each: pooling every part
+      // instead means a student quoting one sub-part covers only a fraction
+      // of the question's vocabulary and never matches.
+      let score = 0;
 
       for (const part of q.parts) {
-        const terms = [
-          ...new Set(tokenise(`${q.intro ?? ""} ${part.prompt}`)),
-        ];
-        if (terms.length === 0) continue;
-        const hits = terms.filter((t) => studentTerms.has(t)).length;
-        bestPartScore = Math.max(bestPartScore, hits / terms.length);
+        const identifying = new Set<string>();
+        for (const t of [...introTerms, ...tokenise(part.prompt)]) {
+          if (weightOf(t) >= DISTINCTIVE_WEIGHT) identifying.add(t);
+        }
+        if (identifying.size === 0) continue;
+
+        let matchedWeight = 0;
+        let totalWeight = 0;
+        let matchedCount = 0;
+        let anchored = false;
+        for (const t of identifying) {
+          const w = weightOf(t);
+          totalWeight += w;
+          if (studentTerms.has(t)) {
+            matchedWeight += w;
+            matchedCount += 1;
+            if (w >= ANCHOR_WEIGHT) anchored = true;
+          }
+        }
+
+        // Two independent rare terms minimum. One is never enough: a lone
+        // uncommon word ("importance") previously carried a match by itself.
+        if (matchedCount < 2 || matchedWeight < MIN_EVIDENCE) continue;
+
+        // And at least one near-unique term — the data that identifies a
+        // specific paper: "36", "snails", "12750", "thalassemia".
+        //
+        // Without this, a generic query ("What are the stages of the cell
+        // cycle?") matched a past-year question whose whole vocabulary is
+        // syllabus wording, and the student got P/Q/R/S scheme points for a
+        // figure they never saw. A student quoting a real paper always
+        // reproduces its numbers or species; one asking their own question
+        // never does.
+        if (!anchored) continue;
+
+        score = Math.max(score, matchedWeight / totalWeight);
       }
 
-      if (!best || bestPartScore > best.score) {
+      if (score > 0 && (!best || score > best.score)) {
         best = {
           question: q,
           chapterEn: chapter.en,
           chapterNumber: chapter.number,
-          score: bestPartScore,
+          score,
         };
       }
     }
   }
 
-  // Below this the "match" is coincidental shared vocabulary, and marking
-  // against the wrong scheme is worse than not marking at all.
-  return best && best.score >= 0.35 ? best : null;
+  // High bar on purpose. Returning a stored mark scheme for a question the
+  // student did not ask is worse than not matching at all: they get a canned
+  // answer to someone else's question instead of an explanation of their own.
+  // Anything below this falls through to the lecturer's notes.
+  return best && best.score >= MATCH_CONFIDENCE ? best : null;
 }
+
+/**
+ * Weighted coverage a submission must reach before its stored mark scheme is
+ * used. Raise it to be stricter (more questions explained from notes), lower
+ * it to match more past-year papers.
+ */
+export const MATCH_CONFIDENCE = 0.35;
+
+/**
+ * Minimum total rare-term weight a match must rest on.
+ *
+ * Roughly "the student reproduced at least one or two terms unique to this
+ * question" — the numbers, species and traits that identify a specific paper
+ * (36%, snails, albinism, eyelashes) rather than the vocabulary every
+ * question on the topic shares.
+ */
+export const MIN_EVIDENCE = 9;
+
+/**
+ * Squared-IDF weight at which a term counts as identifying rather than
+ * topical. Around here sit the species, traits and numbers unique to one
+ * paper; below it the vocabulary every question on the chapter shares.
+ */
+export const DISTINCTIVE_WEIGHT = 4;
+
+/**
+ * Weight at which a term is near-unique to one paper — its data, species or
+ * named disease. A match must rest on at least one of these.
+ */
+export const ANCHOR_WEIGHT = 7;
 
 /** Which stored part best matches a chunk of the student's text. */
 export function bestPartFor(

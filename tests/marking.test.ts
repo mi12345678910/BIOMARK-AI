@@ -136,7 +136,7 @@ check(
 );
 
 // ── Case 1 / Case 2 routing ───────────────────────────────────────────────
-const { findQuestionMatch, searchNotes } = await import("../src/lib/lookup.ts");
+const { findQuestionMatch, searchNotes, tokenise } = await import("../src/lib/lookup.ts");
 
 // A student pasting a real bank question should be routed to grading.
 const hit = findQuestionMatch(
@@ -191,13 +191,28 @@ const scoped = markQuestion(chosen, { [chosen[0].ref]: onePart });
 check("a fully correct single answer scores full marks", scoped.awarded, 3);
 check("maximum reflects only what was asked", scoped.maximum, 3);
 
-// Two sub-parts submitted together should both be marked.
+// Generic syllabus wording carries no identifying data, so it must go to the
+// notes rather than to some past-year paper's scheme. This previously matched
+// c5-ups2-2005 purely on shared Hardy-Weinberg vocabulary.
+check(
+  "generic Hardy-Weinberg wording is not claimed by a past paper",
+  findQuestionMatch(
+    "State the Hardy-Weinberg Principle. List TWO conditions for this principle to be achieved.",
+  ),
+  null,
+);
+
+// Two sub-parts submitted together should both be marked — quoted with the
+// data that identifies the paper.
 const twoParts =
-  "State the Hardy-Weinberg Principle. List TWO conditions for this principle to be achieved. " +
-  "In genetic equilibrium the allele and genotype frequencies remain constant. No mutation, no migration.";
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). " +
+  "In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice. " +
+  "In a human population, the frequency of recessive individuals for extra-long eyelashes is 90 per 1000. " +
+  "What percentage of this population carries the recessive allele but displays the short-eyelash phenotype?";
 const hw = findQuestionMatch(twoParts)!;
+check("two-part paste still identifies the paper", hw?.question.id, "c5-ups2-2005");
 const bothRefs = selectRelevantParts(hw.question, twoParts).map((p) => p.ref);
-check("two sub-parts asked -> both marked", bothRefs, ["(a)(i)", "(a)(ii)"]);
+check("two sub-parts asked -> both marked", bothRefs, ["(b)", "(c)"]);
 
 // The placeholder is a hint, not payload: it must never reach the marker.
 check(
@@ -471,6 +486,70 @@ const diagramOrphans = fs
   .map((f) => `/diagrams/${f}`)
   .filter((f) => !DIAGRAMS.some((d) => d.image === f));
 check("no unreferenced diagram files", diagramOrphans.length, 0);
+
+// ── Custom questions must not trigger a canned mark scheme ────────────────
+//
+// The bug: weak keyword overlap ("frequency", "allele", "population") matched
+// a past-year prompt and returned its scheme, so a student asking their own
+// question got a canned answer to someone else's.
+const CUSTOM_QUESTIONS = [
+  "Explain why the frequency of the recessive allele stays constant in a large population",
+  "Calculate the frequency of heterozygous individuals in a population of butterflies",
+  "Explain the importance of DNA replication before cell division",
+  "Describe how crossing over produces genetic variation",
+  "Explain the difference between mitosis and meiosis",
+  "Calculate the frequency of the dominant allele in a population",
+  "What is the importance of the S phase in the cell cycle?",
+  "How does non-disjunction cause Down syndrome?",
+  "Why is meiosis important for sexual reproduction?",
+  "What are the stages of the cell cycle?",
+  "State the Hardy-Weinberg law and its assumptions",
+  "Describe the events in prophase I of meiosis",
+  "What happens during transcription?",
+  "Explain how the lac operon works",
+  "What is the role of DNA ligase?",
+];
+const falsePositives = CUSTOM_QUESTIONS.filter((q) => findQuestionMatch(q));
+if (falsePositives.length)
+  falsePositives.forEach((q) =>
+    console.log(`  ! "${q}" -> ${findQuestionMatch(q)!.question.id}`),
+  );
+check("custom questions are never given a canned scheme", falsePositives.length, 0);
+
+// Every custom question must still get something useful back.
+const unhelped = CUSTOM_QUESTIONS.filter((q) => searchNotes(q, 3).length === 0);
+check("every custom question gets notes instead", unhelped.length, 0);
+
+// ── Real past-year questions must still be recognised ─────────────────────
+const REAL_QUESTIONS = [
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice.",
+  "In a population, 14% of babies are born with albinism. Calculate the frequency of the recessive allele.",
+  "In a population of 1000 snails that mate randomly, 800 are grey. Calculate the dominant and recessive allele frequencies.",
+  "In a population of mice the allele for yellow fur E is dominant over grey fur e. 16% have grey fur. Calculate the frequency of yellow and grey fur alleles.",
+  "In the population of 700 hamsters, 543 have black fur. Calculate the genotype frequency of heterozygous hamsters.",
+  "One in 3600 persons inherits Tay-Sachs disease. Calculate the percentage of dominant homozygous.",
+  "In a population of 6000 wolves, 26 are albino. Calculate the allele frequencies for A and a.",
+  "Thalassemia major is homozygous recessive. In a population of 12750, two individuals suffer from thalassemia major. Determine the frequencies of the dominant and recessive alleles.",
+  "In a population of 13000 wild chickens, 16% have short legs. How many are heterozygotes if the population increases to 15000?",
+  "A farmer has 2000 cows, 1500 brown coated. Calculate the frequency for the dominant and recessive alleles.",
+  "In a population of 2000 fruit flies, 320 have ebony body. Calculate the frequencies of E and e alleles.",
+  "In a population of 10000, 2 individuals were born with severe anaemia. Determine the frequency of the dominant and recessive alleles.",
+];
+const missed = REAL_QUESTIONS.filter((q) => !findQuestionMatch(q));
+if (missed.length) missed.forEach((q) => console.log(`  ! missed: ${q.slice(0, 70)}`));
+check("real past-year questions are still matched", missed.length, 0);
+
+// Thousands separators: the bank prints "12,750", students type "12750".
+check(
+  "comma-separated numbers tokenise the same either way",
+  tokenise("a population of 12,750 individuals").includes("12750"),
+  true,
+);
+check(
+  "space-separated numbers too",
+  tokenise("increases to 15 000").includes("15000"),
+  true,
+);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
