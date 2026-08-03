@@ -35,6 +35,22 @@ export default function HomePage() {
 
           <h1 className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-[#14343f] sm:text-5xl dark:text-white">
             {t("heroTitleA")}{" "}
+            {/* Highlighter-pen treatment: a revision cue that reads as a
+                marker swipe rather than competing with the coral gradient.
+                Sizes are in `em` so it tracks the heading's responsive size. */}
+            <span className="relative inline-block whitespace-nowrap align-baseline">
+              {/* Tailwind v4 emits the standalone `rotate` CSS property here,
+                  not `transform` — worth knowing if you ever inspect this and
+                  think the tilt is missing. */}
+              <span
+                aria-hidden="true"
+                className="absolute -inset-x-[0.12em] top-[0.02em] bottom-0 rotate-[-1.8deg] rounded-[0.14em] bg-gradient-to-r from-amber-300/80 via-amber-200/95 to-amber-300/70 dark:from-amber-400/40 dark:via-amber-300/50 dark:to-amber-400/35"
+              />
+              <span className="relative text-[0.78em] font-extrabold uppercase tracking-[0.02em] text-teal-900 dark:text-amber-50">
+                {t("heroRevision")}
+              </span>
+            </span>
+            ,{" "}
             <span className="bg-gradient-to-r from-coral-500 to-coral-400 bg-clip-text text-transparent">
               {t("heroTitleB")}
             </span>

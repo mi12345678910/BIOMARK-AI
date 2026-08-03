@@ -18,7 +18,10 @@ const STRINGS = {
     navQuiz: "Topic Quiz",
     langLabel: "Language",
 
-    heroTitleA: "Matriculation Biology,",
+    // Split so "(Revision)" can be styled on its own; the comma follows the
+    // badge rather than the word "Biology".
+    heroTitleA: "Matriculation Biology",
+    heroRevision: "(Revision)",
     heroTitleB: "marked in seconds.",
     heroBody:
       "Real past-year PSPM questions, marked against the official KPM scheme. Write your answer and see which keyword earned or cost you each mark — instantly, and with no account to create.",
@@ -156,7 +159,8 @@ const STRINGS = {
     navQuiz: "Kuiz Topik",
     langLabel: "Bahasa",
 
-    heroTitleA: "Biologi Matrikulasi,",
+    heroTitleA: "Biologi Matrikulasi",
+    heroRevision: "(Ulang Kaji)",
     heroTitleB: "ditanda dalam beberapa saat.",
     heroBody:
       "Soalan sebenar tahun lepas PSPM, ditanda mengikut skema rasmi KPM. Tulis jawapan anda dan lihat kata kunci yang memberi atau menghilangkan setiap markah — serta-merta, tanpa perlu daftar akaun.",
