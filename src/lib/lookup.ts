@@ -33,16 +33,23 @@ const STOP = new Set([
   "mark", "following", "above", "below", "figure", "table", "shows", "shown",
   "if", "then", "than", "there", "their", "has", "have", "will", "can", "not",
 
-  // exam and syllabus phrasing — common to every paper, unique to none
+  // Exam phrasing — words a question is ASKED with, never words that say
+  // WHICH question it is. Rarity alone rated these above "mice", so a
+  // student asking "what is the importance of the S phase?" was handed a
+  // past-year scheme.
+  //
+  // Deliberately NOT listed: "stage", "phase", "labelled", "event". Those
+  // read like phrasing but are the entire identity of the figure questions
+  // ("FIGURE 2 shows the stages of the cell cycle, labelled P, Q, R and S").
+  // Removing them made one paper indistinguishable from another and the
+  // wrong scheme was applied.
   "importance", "important", "significance", "significant",
   "assumption", "assumptions", "condition", "conditions",
   "law", "principle", "principles", "equation", "formula",
-  "stage", "stages", "phase", "phases", "step", "steps",
-  "event", "events", "occur", "occurs", "occurring",
   "difference", "differences", "similarity", "similarities",
   "role", "roles", "function", "functions", "process", "processes",
   "individual", "individuals", "suffer", "suffering", "suffered",
-  "labelled", "labeled", "diagram", "based", "using", "used", "assume",
+  "diagram", "based", "using", "used", "assume",
 
   // connectives — "during" was scoring as an identifying term and matched
   // "what happens during transcription?" to a cell-cycle question
@@ -156,11 +163,36 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
       let score = 0;
 
       for (const part of q.parts) {
-        const identifying = new Set<string>();
-        for (const t of [...introTerms, ...tokenise(part.prompt)]) {
-          if (weightOf(t) >= DISTINCTIVE_WEIGHT) identifying.add(t);
+        const allTerms = [...new Set([...introTerms, ...tokenise(part.prompt)])];
+        const identifying = new Set(
+          allTerms.filter((t) => weightOf(t) >= DISTINCTIVE_WEIGHT),
+        );
+
+        // Some questions have NO identifying terms at all. "State the
+        // Hardy-Weinberg Principle" reduces to hardy + weinberg, and both
+        // appear in 20 of the 53 stored prompts — the identical sentence is in
+        // 20 papers, so nothing can single one out.
+        //
+        // They are still markable: every one of those papers carries the same
+        // scheme points, so any of them answers the student correctly. They
+        // qualify by near-verbatim wording instead.
+        if (identifying.size === 0) {
+          if (allTerms.length < 2) continue;
+
+          // Only for parts whose ANSWER is generic too. "State the
+          // Hardy-Weinberg Principle" has a prose scheme point that answers
+          // anyone who asks it. "Calculate the frequency of the dominant
+          // allele" has a scheme reading "p = 1 − 0.37 = 0.63" — numbers
+          // belonging to a 14%-albinism population the student never
+          // mentioned, so serving it to a vague query is just wrong.
+          const schemeHasData = part.points.some((p) => /\d/.test(p.text));
+          if (schemeHasData) continue;
+
+          const hits = allTerms.filter((t) => studentTerms.has(t)).length;
+          const verbatim = hits / allTerms.length;
+          if (verbatim >= VERBATIM_CONFIDENCE) score = Math.max(score, verbatim);
+          continue;
         }
-        if (identifying.size === 0) continue;
 
         let matchedWeight = 0;
         let totalWeight = 0;
@@ -176,23 +208,32 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
           }
         }
 
+        const ratioOfIdentifying = matchedWeight / totalWeight;
+
         // Two independent rare terms minimum. One is never enough: a lone
         // uncommon word ("importance") previously carried a match by itself.
         if (matchedCount < 2 || matchedWeight < MIN_EVIDENCE) continue;
 
-        // And at least one near-unique term — the data that identifies a
-        // specific paper: "36", "snails", "12750", "thalassemia".
+        // An anchor is a near-unique term — "36", "snails", "12750". Most
+        // papers have one, but definition questions ("State the Hardy-Weinberg
+        // Principle") genuinely do not, and requiring one rejected them
+        // outright: a student pasting a real question with their answer got
+        // notes instead of marks.
         //
-        // Without this, a generic query ("What are the stages of the cell
-        // cycle?") matched a past-year question whose whole vocabulary is
-        // syllabus wording, and the student got P/Q/R/S scheme points for a
-        // figure they never saw. A student quoting a real paper always
-        // reproduces its numbers or species; one asking their own question
-        // never does.
-        if (!anchored) continue;
+        // So it is not required on its own. It lets a partial quote through,
+        // while a submission without one must instead reproduce nearly all of
+        // the question's identifying wording.
+        if (!anchored && ratioOfIdentifying < STRICT_CONFIDENCE) continue;
 
-        score = Math.max(score, matchedWeight / totalWeight);
+        score = Math.max(score, ratioOfIdentifying);
       }
+
+      // A question built around a diagram cannot be answered without it.
+      // "Name the stages labelled P, Q, R and S" is meaningless unless the
+      // student is looking at FIGURE 2 — so a generic query like "what are
+      // the stages of the cell cycle?" must not be handed its scheme. Require
+      // the student to actually reference the figure.
+      if (q.figure && !/\bfigure\b|\brajah\b/i.test(text)) continue;
 
       if (score > 0 && (!best || score > best.score)) {
         best = {
@@ -242,6 +283,22 @@ export const DISTINCTIVE_WEIGHT = 4;
  */
 export const ANCHOR_WEIGHT = 7;
 
+/**
+ * Coverage a submission must reach when it has no anchor term.
+ *
+ * Definition questions ("State the Hardy-Weinberg Principle") carry no data
+ * to anchor on, so they qualify a different way: by reproducing almost all of
+ * the question's identifying wording.
+ */
+export const STRICT_CONFIDENCE = 0.75;
+
+/**
+ * Bar for a question that has no identifying terms whatsoever, where the only
+ * evidence available is that the student reproduced its wording almost
+ * exactly.
+ */
+export const VERBATIM_CONFIDENCE = 0.9;
+
 /** Which stored part best matches a chunk of the student's text. */
 export function bestPartFor(
   question: Structured,
@@ -280,17 +337,45 @@ export function hasAttempt(question: Structured, text: string): boolean {
     ...question.parts.map((p) => p.prompt),
   ].join(" ");
 
+  // An explicit answer marker with something after it. This is the strongest
+  // signal and the only one that catches a one-word answer: "Name phase P. My
+  // answer: interphase" adds a single new word, well under any word count,
+  // and was being shown a model answer instead of being marked.
+  if (/\b(my answer|answer|jawapan(?:\s+saya)?)\s*[:\-–]\s*\S+/i.test(text)) {
+    return true;
+  }
+
   const questionTerms = new Set(tokenise(questionText));
-  const newWords = new Set(
-    tokenise(text).filter((t) => !questionTerms.has(t)),
-  );
+  const newWords = new Set(tokenise(text).filter((t) => !questionTerms.has(t)));
   if (newWords.size >= 3) return true;
 
-  const numbersIn = (s: string) => s.match(/\d+(?:\.\d+)?/g) ?? [];
+  // Normalise thousands separators before comparing, exactly as `tokenise`
+  // does. Without it the stored "12,750" reads as 12 and 750, so a student
+  // pasting "12750" looked like they had calculated something new — and a
+  // question with no answer was marked 0.
+  const numbersIn = (s: string) =>
+    s.replace(/(\d)[,\s](\d{3})\b/g, "$1$2").match(/\d+(?:\.\d+)?/g) ?? [];
   const questionNumbers = new Set(numbersIn(questionText));
   const newNumbers = numbersIn(text).filter((n) => !questionNumbers.has(n));
 
   return newNumbers.length > 0;
+}
+
+/**
+ * Single-letter labels tied to what they label — "phase P", "stage Q".
+ *
+ * `tokenise` drops anything under three characters, so "Name phase P" and
+ * "Explain the importance of phase R" both reduce to ["phase"]: identical, and
+ * both were marked when a student answered only one. The letter IS the
+ * distinction, so it has to be read before tokenising.
+ */
+function labelsIn(text: string): Set<string> {
+  const out = new Set<string>();
+  const re = /\b(phase|stage|figure|region|point|label(?:led)?)\s+([a-z0-9])\b/gi;
+  for (const m of text.matchAll(re)) {
+    out.add(`${m[1].toLowerCase()} ${m[2].toLowerCase()}`);
+  }
+  return out;
 }
 
 /**
@@ -308,11 +393,23 @@ export function selectRelevantParts(
 ): QuestionPart[] {
   const studentTerms = new Set(tokenise(text));
 
+  const studentLabels = labelsIn(text);
+
   const scored = question.parts.map((part) => {
     const terms = [...new Set(tokenise(part.prompt))];
-    const score = terms.length
+    let score = terms.length
       ? terms.filter((t) => studentTerms.has(t)).length / terms.length
       : 0;
+
+    // If both the student and this part name a label, they must be the same
+    // one. Without this a student answering "Name phase P" was also marked on
+    // "Explain the importance of phase R" and scored 1/4 instead of 1/1.
+    const partLabels = labelsIn(part.prompt);
+    if (partLabels.size > 0 && studentLabels.size > 0) {
+      const shared = [...partLabels].some((l) => studentLabels.has(l));
+      if (!shared) score = 0;
+    }
+
     return { part, score };
   });
 

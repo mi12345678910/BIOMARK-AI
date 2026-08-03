@@ -191,14 +191,21 @@ const scoped = markQuestion(chosen, { [chosen[0].ref]: onePart });
 check("a fully correct single answer scores full marks", scoped.awarded, 3);
 check("maximum reflects only what was asked", scoped.maximum, 3);
 
-// Generic syllabus wording carries no identifying data, so it must go to the
-// notes rather than to some past-year paper's scheme. This previously matched
-// c5-ups2-2005 purely on shared Hardy-Weinberg vocabulary.
+// "State the Hardy-Weinberg Principle" appears verbatim in 20 of the 53
+// stored prompts, so no paper can be singled out — but every one of them
+// carries the same prose scheme point, so answering from any is correct.
+// Matching here is right; what must not happen is a DATA-bearing scheme
+// ("p = 1 − 0.37 = 0.63") being served to a query with no data in it.
 check(
-  "generic Hardy-Weinberg wording is not claimed by a past paper",
+  "a definition question shared across papers is still answerable",
   findQuestionMatch(
     "State the Hardy-Weinberg Principle. List TWO conditions for this principle to be achieved.",
-  ),
+  ) !== null,
+  true,
+);
+check(
+  "a generic instruction never gets a data-specific scheme",
+  findQuestionMatch("Calculate the frequency of the dominant allele in a population"),
   null,
 );
 
@@ -498,12 +505,10 @@ const CUSTOM_QUESTIONS = [
   "Explain the importance of DNA replication before cell division",
   "Describe how crossing over produces genetic variation",
   "Explain the difference between mitosis and meiosis",
-  "Calculate the frequency of the dominant allele in a population",
   "What is the importance of the S phase in the cell cycle?",
   "How does non-disjunction cause Down syndrome?",
   "Why is meiosis important for sexual reproduction?",
   "What are the stages of the cell cycle?",
-  "State the Hardy-Weinberg law and its assumptions",
   "Describe the events in prophase I of meiosis",
   "What happens during transcription?",
   "Explain how the lac operon works",
@@ -549,6 +554,90 @@ check(
   "space-separated numbers too",
   tokenise("increases to 15 000").includes("15000"),
   true,
+);
+
+// ── End-to-end: question + answer must actually be marked ─────────────────
+//
+// The regression that prompted these: pasting a real question with an answer
+// stopped producing marks. Three separate causes — the paper wasn't matched,
+// the wrong sub-part was chosen, or the answer wasn't recognised as an
+// attempt. This walks the whole route the app takes.
+function route(text: string) {
+  const m = findQuestionMatch(text);
+  if (!m) return { mode: "notes" as const };
+  const parts = selectRelevantParts(m.question, text);
+  if (!hasAttempt(m.question, text))
+    return { mode: "model" as const, id: m.question.id, refs: parts.map((p) => p.ref) };
+  const answers: Record<string, string> = {};
+  for (const p of parts) answers[p.ref] = text;
+  const r = markQuestion(parts, answers);
+  return {
+    mode: "graded" as const,
+    id: m.question.id,
+    refs: parts.map((p) => p.ref),
+    awarded: r.awarded,
+    maximum: r.maximum,
+  };
+}
+
+const FIG1 = "FIGURE 1 shows a cell cycle with phases P Q R and Mitosis. ";
+const MICE =
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice. ";
+
+check(
+  "question + one-word answer is graded, not shown a model answer",
+  route(`${FIG1}Name phase P. My answer: interphase`),
+  { mode: "graded", id: "c3-pspm1-2018", refs: ["(a)(i)"], awarded: 1, maximum: 1 },
+);
+
+// Single-letter labels: "phase P" and "phase R" both tokenise to ["phase"],
+// so answering one was marked against both and scored 1/4.
+check(
+  "only the labelled part asked about is marked",
+  route(
+    `${FIG1}Explain the importance of phase R. My answer: DNA is replicated so daughter cells maintain the same chromosome number, doubling the genome`,
+  ).refs,
+  ["(a)(iii)"],
+);
+
+check(
+  "question + partial answer scores partial marks",
+  route(`${MICE}My answer: q = 0.6, p = 0.4, black coat = p2 = 0.16`),
+  { mode: "graded", id: "c5-ups2-2005", refs: ["(b)"], awarded: 2, maximum: 3 },
+);
+
+// No number or species to anchor on, but near-verbatim wording.
+check(
+  "a definition question with an answer is still graded",
+  route(
+    "State the Hardy-Weinberg Principle. List TWO conditions for this principle to be achieved. Answer: In genetic equilibrium the allele and genotype frequencies remain constant. No mutation, no migration.",
+  ).mode,
+  "graded",
+);
+
+check(
+  "figure question with an answer is graded against the right paper",
+  route(
+    "FIGURE 2 shows the stages of the cell cycle labelled P Q R and S. Name the stages labelled P Q R and S. My answer: P is mitosis, Q is G1, R is S phase, S is G2",
+  ).id,
+  "c3-pspm1-2012",
+);
+
+// Question with no answer must never be marked 0.
+check("question alone gets a model answer", route(`${MICE}`).mode, "model");
+check(
+  "thousands separators don't fake an attempt",
+  route(
+    "Thalassemia major is homozygous recessive. In a population of 12750, two individuals suffer from thalassemia major. Determine the frequencies of the dominant and recessive alleles.",
+  ).mode,
+  "model",
+);
+
+// Figure-dependent questions must not be handed to a generic query.
+check(
+  "generic query never gets a figure question's scheme",
+  route("What are the stages of the cell cycle?").mode,
+  "notes",
 );
 
 console.log(`\n${pass} passed, ${fail} failed`);
