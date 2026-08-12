@@ -492,6 +492,28 @@ function labelsIn(text: string): Set<string> {
  * a whole question photographed was marked out of 6 instead of 10, and with
  * worse scans only part (a) survived.
  */
+/**
+ * Sub-part markers in the order they appear — "(i)", "(ii)", "(iii)".
+ *
+ * The numeral itself is NOT trusted. "(ii)" is two thin adjacent strokes and
+ * OCR renders it as "(li)", "(ll)", "(11)", "(u)", "(i i)" or "(ii" depending
+ * on the scan; nine of eleven realistic misreadings made the part vanish from
+ * the marking. What survives reliably is that a sub-part begins a line and
+ * that sub-parts run in order, so position is used instead of the glyph.
+ *
+ * Matched conservatively — a bracketed token of one to five characters,
+ * starting a line, followed by the question text — so prose and working are
+ * not mistaken for labels.
+ */
+function detectSubPartMarkers(text: string): number {
+  // Opening bracket required, closing bracket optional, one internal space
+  // tolerated — OCR splits "(ii)" into "(i i)" and clips it to "(ii" often
+  // enough that demanding a clean pair loses the part.
+  const re =
+    /^[ \t]*\(\s*[a-z0-9|!]{1,3}(?:[ \t]+[a-z0-9|!]{1,3})?\s*\)?[ \t]+(?=[A-Z(])/gim;
+  return (text.match(re) ?? []).length;
+}
+
 function partsExplicitlyLabelled(
   question: Structured,
   text: string,
@@ -528,6 +550,16 @@ export function selectRelevantParts(
 ): QuestionPart[] {
   // If the submission names its sub-parts, trust that over term overlap.
   const labelled = partsExplicitlyLabelled(question, text);
+
+  // The submission lays out as many sub-parts as the question has, but fewer
+  // were recognised by name — a misread numeral, almost always "(ii)". Take
+  // all of them: the student clearly answered the whole question, and marking
+  // them on two parts out of three silently costs marks they earned.
+  const markers = detectSubPartMarkers(text);
+  if (markers >= question.parts.length && labelled.length < question.parts.length) {
+    return question.parts;
+  }
+
   if (labelled.length > 0) return labelled;
 
   const studentTerms = new Set(tokenise(text));

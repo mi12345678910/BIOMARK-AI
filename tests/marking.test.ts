@@ -1045,5 +1045,55 @@ check(
   true,
 );
 
+// ── A misread sub-part label must not lose the part ───────────────────────
+//
+// "(ii)" is two thin adjacent strokes and OCR renders it as "(li)", "(ll)",
+// "(11)", "(u)", "(i i)" or clips it to "(ii". Nine of eleven realistic
+// misreadings dropped part (a)(ii) from the marking, so a student who had
+// answered all three parts was marked out of 4 instead of 6 with nothing to
+// show a part had vanished.
+const pageWith = (label: string) =>
+  [
+    "PSPM I 2018/2019",
+    "1.    (a)    FIGURE 1 shows a cell cycle.",
+    "      (i)    Name phase P.   [1 mark]",
+    "             Interphase",
+    `      ${label}   Describe the events that occur in phase Q.   [2 marks]`,
+    "             Cell growth and produce macromolecules",
+    "      (iii)  Explain the importance of phase R.   [3 marks]",
+    "             Maintain the same number of chromosomes in daughter cells and to double the genome",
+  ].join("\n");
+
+const misreadings = ["(ii)", "(i i)", "(li)", "(ll)", "(11)", "(II)", "(ii", "(u)", "(iij)", "(fi)", "(2)"];
+const lost = misreadings.filter((label) => {
+  const page = pageWith(label);
+  const m = findQuestionMatch(page);
+  if (!m) return true;
+  return !selectRelevantParts(m.question, page).some((p) => p.ref === "(a)(ii)");
+});
+if (lost.length) console.log(`  ! label misreadings that lose the part: ${lost.join(", ")}`);
+check("a misread sub-part label still gets marked", lost.length, 0);
+
+check(
+  "and the question is marked out of its full total",
+  (() => {
+    const r = route(pageWith("(li)"));
+    return r.mode === "graded" ? r.maximum : 0;
+  })(),
+  6,
+);
+
+// The positional fallback must not over-select when only one part was asked.
+check(
+  "answering one sub-part still marks only that part",
+  (() => {
+    const t =
+      "FIGURE 1 shows a cell cycle with phases P Q R and Mitosis. (iii) Explain the importance of phase R. My answer: DNA is replicated so daughter cells keep the same chromosome number and the genome is doubled";
+    const m = findQuestionMatch(t)!;
+    return selectRelevantParts(m.question, t).map((p) => p.ref);
+  })(),
+  ["(a)(iii)"],
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
