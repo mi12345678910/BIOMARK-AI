@@ -354,7 +354,14 @@ export function hasAttempt(question: Structured, text: string): boolean {
   // pasting "12750" looked like they had calculated something new — and a
   // question with no answer was marked 0.
   const numbersIn = (s: string) =>
-    s.replace(/(\d)[,\s](\d{3})\b/g, "$1$2").match(/\d+(?:\.\d+)?/g) ?? [];
+    s
+      // Question and sub-part numbering is not working out. "1." at the start
+      // of a line was counted as a number the student had produced, so a
+      // question pasted with its numbering intact looked like an attempt and
+      // was marked 0.
+      .replace(/^\s*\d+\s*[.)]/gm, " ")
+      .replace(/(\d)[,\s](\d{3})\b/g, "$1$2")
+      .match(/\d+(?:\.\d+)?/g) ?? [];
   const questionNumbers = new Set(numbersIn(questionText));
   const newNumbers = numbersIn(text).filter((n) => !questionNumbers.has(n));
 
@@ -387,10 +394,53 @@ function labelsIn(text: string): Set<string> {
  * three unrelated parts listed as failed. Only parts whose wording the student
  * clearly reproduced are marked.
  */
+/**
+ * Sub-part labels the student's text actually contains — "(a)", "(b)(ii)".
+ *
+ * These survive OCR far better than prose does: a photographed page comes back
+ * with "populaton", "mce" and "eyeIashes", but "(c)" stays "(c)". Coverage
+ * scoring alone therefore dropped the later parts of a multi-part question —
+ * a whole question photographed was marked out of 6 instead of 10, and with
+ * worse scans only part (a) survived.
+ */
+function partsExplicitlyLabelled(
+  question: Structured,
+  text: string,
+): QuestionPart[] {
+  // "(a) (i)" and "(a)(i)" are the same reference.
+  const flat = text.toLowerCase().replace(/\s+/g, " ").replace(/\)\s*\(/g, ")(");
+
+  return question.parts.filter((part) => {
+    const ref = part.ref.toLowerCase().replace(/\s+/g, "");
+
+    // Nested refs like "(a)(ii)". Papers print the parent letter once and then
+    // list the children bare:
+    //     1. (a) (i)  State the ...
+    //            (ii) List TWO ...
+    // so "(a)(ii)" never appears literally and the second sub-part was being
+    // dropped from every multi-part submission.
+    const nested = ref.match(/^\(([a-z])\)\(([ivx]+)\)$/);
+    if (nested) {
+      const [, parent, child] = nested;
+      if (flat.includes(`(${parent})(${child})`)) return true;
+      return flat.includes(`(${parent})`) && flat.includes(`(${child})`);
+    }
+
+    const escaped = ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Negative lookahead so a bare "(b)" doesn't also match "(b)(i)", which
+    // would select the parent alongside every one of its children.
+    return new RegExp(`${escaped}(?!\\()`).test(flat);
+  });
+}
+
 export function selectRelevantParts(
   question: Structured,
   text: string,
 ): QuestionPart[] {
+  // If the submission names its sub-parts, trust that over term overlap.
+  const labelled = partsExplicitlyLabelled(question, text);
+  if (labelled.length > 0) return labelled;
+
   const studentTerms = new Set(tokenise(text));
 
   const studentLabels = labelsIn(text);

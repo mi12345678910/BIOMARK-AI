@@ -640,5 +640,80 @@ check(
   "notes",
 );
 
+// ── A photographed multi-part question must be marked in full ─────────────
+//
+// OCR garbles prose ("mce", "whte", "eyeIashes") but leaves the "(a)/(b)/(c)"
+// markers intact. Coverage scoring alone therefore dropped the later parts:
+// a whole question photographed was marked out of 6 instead of 10, and on a
+// poorer scan only part (a) survived.
+const OCR_MULTIPART = [
+  "UPS Il 2005/2006",
+  "1. (a) (i)  State the Hardy-Weinberg Principle. [1 mark]",
+  "In a population in genetic equilibrium the allele and genotype frequencies remain constant",
+  "(ii) List TWO conditions for this principle to be achieved. [2 marks]",
+  "No mutation.  No migration.",
+  "(b) In a randomly breeding populaton of mce, black coat (H) is dominant to whte coat (h).",
+  "ln the populaton, 36% have whte coats. Calculate the phenotype frequences of black coat mce. [3 marks]",
+  "q2 = 0.36  q = 0.6  p = 0.4  black = p2 + 2pq = 0.64",
+  "(c) ln a human populaton, the frequency of recessve indviduals for extra-Iong eyeIashes is 90 per 1000.",
+  "q2 = 0.09  q = 0.3  p = 0.7  2pq x 100 = 42%",
+].join("\n");
+
+const ocrRoute = route(OCR_MULTIPART);
+check(
+  "every sub-part of a photographed question is marked",
+  ocrRoute.mode === "graded" ? ocrRoute.refs : ocrRoute.mode,
+  ["(a)(i)", "(a)(ii)", "(b)", "(c)"],
+);
+check(
+  "it is marked out of the full question total",
+  ocrRoute.mode === "graded" ? ocrRoute.maximum : 0,
+  10,
+);
+check(
+  "a correct scanned answer still scores full marks",
+  ocrRoute.mode === "graded" ? ocrRoute.awarded : 0,
+  10,
+);
+
+// Papers print "(a) (i) … (ii) …" — the parent letter appears once, so the
+// second sub-part never occurs as a literal "(a)(ii)".
+check(
+  "a bare (ii) under an earlier (a) still selects (a)(ii)",
+  selectRelevantParts(
+    findStructured("c5-ups2-2005")!.q,
+    "1. (a)(i) State the Hardy-Weinberg Principle. (ii) List TWO conditions.",
+  ).map((p) => p.ref),
+  ["(a)(i)", "(a)(ii)"],
+);
+
+// A bare "(b)" must not drag in "(b)(i)" and "(b)(ii)" as well.
+check(
+  "nested refs are selected without their siblings",
+  selectRelevantParts(
+    findStructured("c5-ups2-2006")!.q,
+    "In a population, 14% of babies are born with albinism. (b)(i) Calculate the frequency of the recessive allele. Answer: q = 0.37",
+  ).map((p) => p.ref),
+  ["(b)(i)"],
+);
+
+// Question numbering is not the student's working.
+check(
+  "leading question numbers don't fake an attempt",
+  route(
+    "1. (a)(i) State the Hardy-Weinberg Principle. (ii) List TWO conditions. (b) 36% have white coats, calculate phenotype frequency of black coat mice. (c) 90 per 1000 extra-long eyelashes.",
+  ).mode,
+  "model",
+);
+
+// Submissions with no labels must still fall back to term coverage.
+check(
+  "unlabelled single-part answers still work",
+  route(
+    "In a randomly breeding population of mice 36% have white coats. Calculate the phenotype frequency of black coat mice. Answer: q = 0.6, p = 0.4, 0.64",
+  ).refs,
+  ["(b)"],
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
