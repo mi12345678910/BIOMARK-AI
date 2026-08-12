@@ -471,9 +471,14 @@ const DRAWING_VERBS =
  * request to draw one, and must still be marked normally.
  */
 export function isDrawingQuestion(text: string): boolean {
-  if (/\b(figure|table)\s*\d*\s*(shows|below)/i.test(text)) {
-    // A supplied figure is only a drawing question if it also asks them to
-    // draw or label something themselves.
+  // "FIGURE" survives OCR as "FlGURE" / "F1GURE", and missing it sent a
+  // supplied-figure question down this path: "Name the stages labelled P, Q,
+  // R and S" was read as a request to label something and answered with a
+  // diagram instead of being marked.
+  if (/\b(f[il1|]gure|tab[il1|]e)\s*\d*\s*(shows|below)/i.test(text)) {
+    // A supplied figure is only a drawing question if it ALSO asks them to
+    // draw or label something themselves. "labelled" describes the figure
+    // they were given; "label" is an instruction to them.
     return /\b(draw|sketch|label|lukis|labelkan|lakar)\b/i.test(text);
   }
   return DRAWING_VERBS.test(text);

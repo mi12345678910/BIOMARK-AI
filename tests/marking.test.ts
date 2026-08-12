@@ -1095,5 +1095,53 @@ check(
   ["(a)(iii)"],
 );
 
+// ── Diagram questions must resolve to the right figure ────────────────────
+//
+// Two Chapter 3 questions reduce to the same words — cell, cycle, labelled,
+// phase — so the ONLY thing separating them is FIGURE 1 against FIGURE 2. That
+// was thrown away twice over: "figure" sits in the stop list and the numeral
+// is below the token length floor, so diagram questions resolved to whichever
+// paper scored higher on shared vocabulary.
+const { figureRefsIn } = await import("../src/lib/lookup.ts");
+
+check("FIGURE 1 is read", [...figureRefsIn("FIGURE 1 shows a cell cycle")], ["figure1"]);
+check("TABLE 1 is distinct from FIGURE 1", [...figureRefsIn("TABLE 1 shows")], ["table1"]);
+check("Malay 'Rajah 2' is read", [...figureRefsIn("Rajah 2 menunjukkan")], ["figure2"]);
+// OCR damages the numeral AND the word: I/l/1 are the same strokes.
+check("OCR 'FIGURE I' still reads as figure 1", [...figureRefsIn("FIGURE I shows")], ["figure1"]);
+check("OCR 'FlGURE 2' still reads as figure 2", [...figureRefsIn("FlGURE 2 shows")], ["figure2"]);
+check("OCR 'F1GURE l' still reads as figure 1", [...figureRefsIn("F1GURE l shows")], ["figure1"]);
+
+const FIG1_PAGE =
+  "PSPM I 2018/2019\n1. (a) FIGURE 1 shows a cell cycle.\n (i) Name phase P. Interphase\n (ii) Describe the events that occur in phase Q. Cell growth and produce macromolecules\n (iii) Explain the importance of phase R. Maintain the same number of chromosomes in daughter cells and double the genome";
+const FIG2_PAGE =
+  "PSPM I 2012/2013\n2. FIGURE 2 shows the stages of the cell cycle.\n (a) Name the stages labelled P, Q, R and S. P is mitosis, Q is G1, R is S phase, S is G2";
+
+check("a FIGURE 1 paper matches its own question", findQuestionMatch(FIG1_PAGE)?.question.id, "c3-pspm1-2018");
+check("a FIGURE 2 paper matches its own question", findQuestionMatch(FIG2_PAGE)?.question.id, "c3-pspm1-2012");
+check(
+  "a damaged figure keyword still resolves correctly",
+  findQuestionMatch(FIG2_PAGE.replace("FIGURE", "FlGURE"))?.question.id,
+  "c3-pspm1-2012",
+);
+
+// "labelled" describes the figure the student was GIVEN. Reading it as an
+// instruction sent a markable question down the diagram path instead.
+check(
+  "a supplied figure is not mistaken for a drawing task",
+  isDrawingQuestion(FIG2_PAGE),
+  false,
+);
+check(
+  "even when the figure keyword is OCR-damaged",
+  isDrawingQuestion(FIG2_PAGE.replace("FIGURE", "FlGURE")),
+  false,
+);
+check(
+  "but a real instruction to label still is",
+  isDrawingQuestion("Draw and label the stages of meiosis I"),
+  true,
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

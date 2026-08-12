@@ -167,6 +167,40 @@ export function quotesPrompt(studentText: string, prompt: string): boolean {
   return flatten(studentText).includes(p);
 }
 
+/**
+ * Figure and table references — "FIGURE 1", "TABLE 2", "Rajah 1".
+ *
+ * This is the strongest discriminator a diagram question has, and it was being
+ * thrown away twice over: "figure" sits in the stop list and the numeral is
+ * below the three-character token floor. Two Chapter 3 questions then reduced
+ * to the same words — cell, cycle, labelled, phase — and the matcher had no
+ * way to tell FIGURE 1 from FIGURE 2, so diagram questions routinely resolved
+ * to the wrong paper.
+ *
+ * The numeral is canonicalised because OCR reads "FIGURE 1" as "FIGURE I",
+ * "FIGURE l" or "FIGURE |" depending on the font.
+ */
+export function figureRefsIn(text: string): Set<string> {
+  const out = new Set<string>();
+  // The WORD is damaged too, not just the numeral: "FIGURE" comes back as
+  // "FlGURE" or "F1GURE" because a capital I and a lowercase l are the same
+  // strokes in many fonts. Missing it dropped the reference entirely and,
+  // worse, made the question look like a drawing task.
+  const re =
+    /\b(f[il1|]gures?|f[il1|]gs?|tab[il1|]es?|rajah|jadua[il1|])\s*\.?\s*([0-9ivxIl|]{1,4})\b/gi;
+
+  for (const m of text.matchAll(re)) {
+    const kind = /tab|jadual/i.test(m[1]!) ? "table" : "figure";
+    let n = m[2]!.toLowerCase().replace(/[il|]/g, "1");
+    // Roman numerals arrive as repeated ones after that substitution.
+    if (n === "11") n = "2";
+    else if (n === "111") n = "3";
+    else if (n === "1v") n = "4";
+    if (/^\d+$/.test(n)) out.add(`${kind}${n}`);
+  }
+  return out;
+}
+
 /** Character bigrams — the unit of comparison for fuzzy phrase matching. */
 function bigrams(input: string): Set<string> {
   const s = flatten(input);
@@ -199,6 +233,8 @@ export function phraseSimilarity(phrase: string, studentText: string): number {
 
 export function findQuestionMatch(text: string): QuestionMatch | null {
   const studentTerms = new Set(tokenise(text));
+  // Computed once: which figures the student actually named.
+  const studentFigures = figureRefsIn(text);
   if (studentTerms.size === 0) return null;
 
   let best: QuestionMatch | null = null;
@@ -312,7 +348,27 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
       // student is looking at FIGURE 2 — so a generic query like "what are
       // the stages of the cell cycle?" must not be handed its scheme. Require
       // the student to actually reference the figure.
-      if (q.figure && !/\bfigure\b|\brajah\b/i.test(text)) continue;
+      if (
+        q.figure &&
+        !/\bf[il1|]gure\b|\brajah\b/i.test(text) &&
+        studentFigures.size === 0
+      ) {
+        continue;
+      }
+
+      // And it must be the SAME figure. Two Chapter 3 questions share almost
+      // every word they contain, so without this the only thing separating
+      // them — FIGURE 1 against FIGURE 2 — carried no weight at all and the
+      // student was marked against the wrong paper's scheme.
+      const questionFigures = figureRefsIn(q.intro ?? "");
+      if (questionFigures.size > 0 && studentFigures.size > 0) {
+        const sameFigure = [...questionFigures].some((f) => studentFigures.has(f));
+        if (!sameFigure) continue;
+        // Naming the right figure is decisive evidence on its own: it is the
+        // one fact a student can only have got from the paper in front of
+        // them, and the surrounding prose is near-identical between papers.
+        score = Math.max(score, FIGURE_MATCH_SCORE);
+      }
 
       if (score > 0 && (!best || score > best.score)) {
         best = {
@@ -387,6 +443,13 @@ export const VERBATIM_CONFIDENCE = 0.9;
  * MATCH_CONFIDENCE's practical range so any real match wins.
  */
 export const GENERIC_PROMPT_CEILING = 0.5;
+
+/**
+ * Score awarded when the student names the same figure the question is built
+ * around. High because it is the one detail that cannot be guessed from the
+ * topic — the surrounding wording is near-identical across papers.
+ */
+export const FIGURE_MATCH_SCORE = 0.85;
 
 /** Which stored part best matches a chunk of the student's text. */
 export function bestPartFor(
