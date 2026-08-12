@@ -77,6 +77,46 @@ export function routeOne(text: string): Routed {
   };
 }
 
+/**
+ * Split one block of text where it holds several whole questions.
+ *
+ * A single photo of a page often covers two or three questions, and routing
+ * the page as one unit marked only the best-matching one — the rest were
+ * discarded with nothing to show they had been.
+ *
+ * Splits on top-level numbering ("1.", "2)", "Q3") and on past-year session
+ * headers ("PSPM I 2018/2019"). Sub-parts — "(a)", "(ii)" — are deliberately
+ * NOT split points; they belong to the question above them.
+ *
+ * Over-splitting is safe: chunks that turn out to be the same question are
+ * merged again by `routeSubmission`.
+ */
+export function splitIntoQuestions(text: string): string[] {
+  const lines = text.split(/\r?\n/);
+
+  const startsQuestion = (line: string) =>
+    // "1. In a population…" / "2) In a population…" — a one or two digit
+    // number, then a separator, then a space and a letter or bracket. The
+    // trailing space matters: it keeps "0.6" and "1.5" out.
+    /^\s*(?:q(?:uestion)?\s*)?\d{1,2}\s*[.)]\s+[A-Za-z(]/i.test(line) ||
+    /^\s*(?:PSPM|UPS)\s+I{1,3}\s*\d{4}\s*\/\s*\d{4}/i.test(line);
+
+  const blocks: string[][] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (startsQuestion(line) && current.some((l) => l.trim())) {
+      blocks.push(current);
+      current = [];
+    }
+    current.push(line);
+  }
+  if (current.some((l) => l.trim())) blocks.push(current);
+
+  const out = blocks.map((b) => b.join("\n")).filter((b) => b.trim().length > 0);
+  return out.length > 0 ? out : [text];
+}
+
 /** The question a routed segment belongs to, or null when it has none. */
 function questionIdOf(routed: Routed): string | null {
   return routed.mode === "graded" || routed.mode === "modelAnswer"
@@ -93,7 +133,15 @@ function questionIdOf(routed: Routed): string | null {
  * distinct, so two photos of two questions produce two results.
  */
 export function routeSubmission(segments: Segment[]): RoutedSegment[] {
-  const usable = segments.filter((s) => s.text.trim().length > 0);
+  // Expand first: one photo can hold several whole questions, and routing the
+  // page as a unit marked only the best-matching one.
+  const usable = segments
+    .filter((s) => s.text.trim().length > 0)
+    .flatMap((s) =>
+      splitIntoQuestions(s.text)
+        .filter((t) => t.trim().length > 0)
+        .map((t) => ({ label: s.label, text: t })),
+    );
   if (usable.length === 0) return [];
 
   const routed = usable.map((s) => ({ segment: s, routed: routeOne(s.text) }));
@@ -118,7 +166,9 @@ export function routeSubmission(segments: Segment[]): RoutedSegment[] {
       const group = routed.slice(i, j);
       const merged = group.map((g) => g.segment.text).join("\n\n");
       out.push({
-        labels: group.map((g) => g.segment.label),
+        // Deduped: chunks split out of the SAME photo and merged back would
+        // otherwise credit that file once per chunk.
+        labels: [...new Set(group.map((g) => g.segment.label))],
         routed: routeOne(merged),
       });
     }

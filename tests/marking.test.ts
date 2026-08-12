@@ -802,5 +802,89 @@ check(
   1,
 );
 
+// ── One photo holding several questions ───────────────────────────────────
+//
+// A page often carries two or three whole questions. Routing the photo as one
+// unit marked only the best-matching one and dropped the rest.
+const twoOnAPage = [
+  "1.  In a randomly breeding population of mice, black coat (H) is dominant to white coat (h).",
+  "    In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice. [3 marks]",
+  "    Answer: q = 0.6, p = 0.4, black coat = p2 + 2pq = 0.64",
+  "",
+  "2.  In a population of 6000 wolves, 26 are albino. Calculate the allele frequencies for A and a. [4 marks]",
+  "    Answer: q2 = 0.004, q = 0.063, p = 0.937",
+].join("\n");
+
+check(
+  "two questions on one page give two marked results",
+  summarise([{ label: "page.jpg", text: twoOnAPage }]),
+  ["c5-ups2-2005:3/3", "c5-pspm1-2023:4/4"],
+);
+
+check(
+  "past-year session headers also separate questions",
+  summarise([
+    {
+      label: "scan.jpg",
+      text: [
+        "UPS II 2005/2006",
+        "In a randomly breeding population of mice 36% have white coats. Calculate the phenotype frequency of black coat mice. Answer: q = 0.6, p = 0.4, 0.64",
+        "PSPM I 2023/2024",
+        "In a population of 6000 wolves, 26 are albino. Calculate the allele frequencies for A and a. Answer: q = 0.063, p = 0.937",
+      ].join("\n"),
+    },
+  ]).length,
+  2,
+);
+
+// Sub-parts belong to the question above them and must never be split off.
+const multiPart = routeSubmission([
+  {
+    label: "p.jpg",
+    text: [
+      "1. (a)(i) State the Hardy-Weinberg Principle. Answer: allele and genotype frequencies remain constant in genetic equilibrium.",
+      "   (ii) List TWO conditions. Answer: no mutation, no migration.",
+      "   (b) In a randomly breeding population of mice, 36% have white coats. Calculate the phenotype frequency of black coat mice. Answer: q = 0.6, p = 0.4, 0.64",
+    ].join("\n"),
+  },
+]);
+check("a multi-part question is not split into pieces", multiPart.length, 1);
+check(
+  "its sub-parts are all marked together",
+  multiPart[0]?.routed.mode === "graded"
+    ? multiPart[0].routed.result.awarded
+    : -1,
+  6,
+);
+
+// Working lines starting with a decimal must not look like question numbers.
+check(
+  "decimal working does not split a question",
+  routeSubmission([
+    {
+      label: "d.jpg",
+      text: [
+        "In a randomly breeding population of mice 36% have white coats. Calculate the phenotype frequency of black coat mice.",
+        "0.36 is q squared",
+        "0.6 is q",
+        "0.64 is the answer",
+      ].join("\n"),
+    },
+  ]).length,
+  1,
+);
+
+// A photo split internally must be credited once, not once per chunk.
+check(
+  "a merged photo is credited once",
+  routeSubmission([
+    {
+      label: "p.jpg",
+      text: "1. State the Hardy-Weinberg Principle. Answer: allele and genotype frequencies remain constant in genetic equilibrium.\n2. List TWO conditions. Answer: no mutation, no migration.",
+    },
+  ])[0]?.labels,
+  ["p.jpg"],
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
