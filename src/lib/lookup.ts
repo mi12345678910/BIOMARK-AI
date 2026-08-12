@@ -167,6 +167,36 @@ export function quotesPrompt(studentText: string, prompt: string): boolean {
   return flatten(studentText).includes(p);
 }
 
+/** Character bigrams — the unit of comparison for fuzzy phrase matching. */
+function bigrams(input: string): Set<string> {
+  const s = flatten(input);
+  const out = new Set<string>();
+  for (let i = 0; i < s.length - 1; i++) out.add(s.slice(i, i + 2));
+  return out;
+}
+
+/**
+ * How much of this phrase's character structure appears in the student's text,
+ * 0–1.
+ *
+ * Containment rather than a symmetric Dice coefficient, because the student's
+ * submission is far longer than the prompt — it holds their whole answer — so
+ * a symmetric measure would score every real match near zero.
+ *
+ * Working on character bigrams rather than whole words is what makes this
+ * survive OCR: "populaton" still shares most of its bigrams with "population",
+ * and "frequences" with "frequencies". Word-level overlap scored those as a
+ * total miss.
+ */
+export function phraseSimilarity(phrase: string, studentText: string): number {
+  const a = bigrams(phrase);
+  if (a.size === 0) return 0;
+  const b = bigrams(studentText);
+  let shared = 0;
+  for (const g of a) if (b.has(g)) shared += 1;
+  return shared / a.size;
+}
+
 export function findQuestionMatch(text: string): QuestionMatch | null {
   const studentTerms = new Set(tokenise(text));
   if (studentTerms.size === 0) return null;
@@ -212,23 +242,22 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
           continue;
         }
 
-        // Some questions have NO identifying terms at all. "State the
-        // Hardy-Weinberg Principle" reduces to hardy + weinberg, and both
-        // appear in 20 of the 53 stored prompts — the identical sentence is in
-        // 20 papers, so nothing can single one out.
-        //
-        // They are still markable: every one of those papers carries the same
-        // scheme points, so any of them answers the student correctly. They
-        // qualify by near-verbatim wording instead.
         // No identifying terms at all — "State the Hardy-Weinberg Principle"
-        // is the same sentence in 20 papers. Those still qualify, but only on
-        // near-verbatim wording, and only when their scheme is prose rather
-        // than someone else's data (guarded above).
+        // is the same sentence in 20 papers, so nothing can single one out.
+        // Still markable, because all 20 carry the same scheme points, but
+        // capped WELL below a genuine identification.
+        //
+        // Scoring these 1.0 was the single worst bug in the matcher: a
+        // two-token generic prompt beat every real question, and 19 of the 60
+        // stored parts stopped identifying even themselves — they all
+        // collapsed onto the one paper that happened to own such a part.
         if (identifying.size === 0) {
           if (allTerms.length < 2) continue;
           const hits = allTerms.filter((t) => studentTerms.has(t)).length;
           const verbatim = hits / allTerms.length;
-          if (verbatim >= VERBATIM_CONFIDENCE) score = Math.max(score, verbatim);
+          if (verbatim >= VERBATIM_CONFIDENCE) {
+            score = Math.max(score, GENERIC_PROMPT_CEILING * verbatim);
+          }
           continue;
         }
 
@@ -263,7 +292,19 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
         // the question's identifying wording.
         if (!anchored && ratioOfIdentifying < STRICT_CONFIDENCE) continue;
 
-        score = Math.max(score, ratioOfIdentifying);
+        // Blend the two views of the match.
+        //
+        // Rare-term coverage alone decides on a handful of words — which
+        // question owns "36" and "mice" — and cannot tell two similarly-worded
+        // papers apart. Character-bigram similarity reads the phrasing of the
+        // whole prompt, so a paper the student actually quoted outranks one
+        // that merely shares its numbers, and it degrades gracefully on OCR
+        // noise instead of failing outright.
+        const phrase = phraseSimilarity(
+          `${q.intro ?? ""} ${part.prompt}`.trim(),
+          text,
+        );
+        score = Math.max(score, 0.6 * ratioOfIdentifying + 0.4 * phrase);
       }
 
       // A question built around a diagram cannot be answered without it.
@@ -336,6 +377,16 @@ export const STRICT_CONFIDENCE = 0.75;
  * exactly.
  */
 export const VERBATIM_CONFIDENCE = 0.9;
+
+/**
+ * Ceiling on a question identified only by generic wording.
+ *
+ * "State the Hardy-Weinberg Principle" appears in 20 papers, so matching it is
+ * a guess between them — useful, since they share a scheme, but it must never
+ * outrank a paper the student actually identified. Held below
+ * MATCH_CONFIDENCE's practical range so any real match wins.
+ */
+export const GENERIC_PROMPT_CEILING = 0.5;
 
 /** Which stored part best matches a chunk of the student's text. */
 export function bestPartFor(

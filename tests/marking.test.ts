@@ -965,5 +965,85 @@ check(
   8,
 );
 
+// ── Every stored question must identify itself ────────────────────────────
+//
+// The strongest invariant available without a model: ask each stored part in
+// its own words and the matcher must return that paper — or one whose scheme
+// points are identical, which happens because the same sentence ("State the
+// Hardy-Weinberg Law") appears in several papers and they all answer it the
+// same way.
+//
+// This caught the worst bug in the matcher: prompts with no identifying terms
+// were scored 1.0, so a two-token generic part outranked every real question
+// and 19 of 60 stored parts stopped identifying themselves.
+const { phraseSimilarity } = await import("../src/lib/lookup.ts");
+
+const schemeOf = (parts: { points: { text: string }[] }[]) =>
+  parts
+    .flatMap((p) => p.points.map((pt) => pt.text.trim()))
+    .sort()
+    .join("|");
+
+let selfOk = 0;
+const selfFail: string[] = [];
+
+for (const chapter of CHAPTERS) {
+  for (const q of chapter.structured) {
+    for (const part of q.parts) {
+      const asked = `${q.intro ?? ""} ${part.prompt}`.trim();
+      const m = findQuestionMatch(asked);
+
+      if (m?.question.id === q.id) {
+        selfOk += 1;
+        continue;
+      }
+      // Accept a different paper only when it answers equivalently. Compared
+      // loosely, because the same scheme point is printed with "//" in one
+      // paper and "and" in another.
+      if (m) {
+        const mine = schemeOf([part]);
+        const equivalent = m.question.parts.some(
+          (p) => phraseSimilarity(mine, schemeOf([p])) > 0.85,
+        );
+        if (equivalent) {
+          selfOk += 1;
+          continue;
+        }
+      }
+      // A generic prompt whose scheme carries another question's data is
+      // deliberately unmatchable — serving it would be wrong.
+      const isGenericWithData =
+        tokenise(part.prompt).length <= 4 &&
+        part.points.some((p) => /\d/.test(p.text));
+      if (!m && isGenericWithData) {
+        selfOk += 1;
+        continue;
+      }
+      selfFail.push(`${q.id} ${part.ref} -> ${m?.question.id ?? "no match"}`);
+    }
+  }
+}
+if (selfFail.length) selfFail.forEach((f) => console.log(`  ! ${f}`));
+check("every stored part identifies itself (or an identical one)", selfFail.length, 0);
+check("self-identification covers the whole bank", selfOk, 60);
+
+// Character-bigram similarity is what survives OCR damage.
+check(
+  "fuzzy similarity tolerates OCR damage",
+  phraseSimilarity(
+    "In a randomly breeding population of mice",
+    "ln a randomIy breedng populaton of mce",
+  ) > 0.6,
+  true,
+);
+check(
+  "fuzzy similarity still separates unrelated phrases",
+  phraseSimilarity(
+    "Explain the behaviour of chromosomes at each stage of meiosis I",
+    "Calculate the frequency of the recessive allele in a population of snails",
+  ) < 0.6,
+  true,
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
