@@ -136,6 +136,37 @@ export interface QuestionMatch {
  * the student's text. Coverage of the question — not of the student's text —
  * because a student may paste a long answer around a short question.
  */
+/**
+ * Loose text for phrase comparison: lowercase, punctuation gone, single
+ * spaces. Keeps every word, unlike `tokenise`.
+ */
+function flatten(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Did the student quote this prompt more or less word for word?
+ *
+ * The strongest signal available, and the one that rescues essays. An essay
+ * prompt is a plain instruction — "Describe the events of all phases in
+ * mitotic cell division" — built from words every question in the chapter
+ * shares, so weighted scoring cannot separate them. Worse, the student's own
+ * ANSWER names prophase, metaphase and anaphase, which dragged the match
+ * towards the anaphase essay instead.
+ *
+ * Quoting the instruction settles it.
+ */
+export function quotesPrompt(studentText: string, prompt: string): boolean {
+  const p = flatten(prompt);
+  // Short prompts ("Name phase P") are not distinctive enough to decide on.
+  if (p.length < 25) return false;
+  return flatten(studentText).includes(p);
+}
+
 export function findQuestionMatch(text: string): QuestionMatch | null {
   const studentTerms = new Set(tokenise(text));
   if (studentTerms.size === 0) return null;
@@ -168,6 +199,19 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
           allTerms.filter((t) => weightOf(t) >= DISTINCTIVE_WEIGHT),
         );
 
+        // Checked before the verbatim shortcut, not after: "Calculate the
+        // frequency of the dominant allele" is quotable word for word but its
+        // scheme reads "p = 1 − 0.37 = 0.63", numbers from a population the
+        // student never mentioned. A quote must not bypass that.
+        const schemeHasData = part.points.some((p) => /\d/.test(p.text));
+        if (identifying.size === 0 && schemeHasData) continue;
+
+        // Verbatim quote beats every weighted heuristic below.
+        if (quotesPrompt(text, part.prompt)) {
+          score = 1;
+          continue;
+        }
+
         // Some questions have NO identifying terms at all. "State the
         // Hardy-Weinberg Principle" reduces to hardy + weinberg, and both
         // appear in 20 of the 53 stored prompts — the identical sentence is in
@@ -176,18 +220,12 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
         // They are still markable: every one of those papers carries the same
         // scheme points, so any of them answers the student correctly. They
         // qualify by near-verbatim wording instead.
+        // No identifying terms at all — "State the Hardy-Weinberg Principle"
+        // is the same sentence in 20 papers. Those still qualify, but only on
+        // near-verbatim wording, and only when their scheme is prose rather
+        // than someone else's data (guarded above).
         if (identifying.size === 0) {
           if (allTerms.length < 2) continue;
-
-          // Only for parts whose ANSWER is generic too. "State the
-          // Hardy-Weinberg Principle" has a prose scheme point that answers
-          // anyone who asks it. "Calculate the frequency of the dominant
-          // allele" has a scheme reading "p = 1 − 0.37 = 0.63" — numbers
-          // belonging to a 14%-albinism population the student never
-          // mentioned, so serving it to a vague query is just wrong.
-          const schemeHasData = part.points.some((p) => /\d/.test(p.text));
-          if (schemeHasData) continue;
-
           const hits = allTerms.filter((t) => studentTerms.has(t)).length;
           const verbatim = hits / allTerms.length;
           if (verbatim >= VERBATIM_CONFIDENCE) score = Math.max(score, verbatim);
@@ -443,6 +481,11 @@ export function selectRelevantParts(
 
   const studentTerms = new Set(tokenise(text));
 
+  // Prompts quoted word for word are definitely being answered.
+  const quoted = new Set(
+    question.parts.filter((p) => quotesPrompt(text, p.prompt)),
+  );
+
   const studentLabels = labelsIn(text);
 
   const scored = question.parts.map((part) => {
@@ -467,16 +510,24 @@ export function selectRelevantParts(
 
   // Nothing resembles any part — fall back to the single closest so the
   // student still gets marked on something rather than on everything.
-  if (top < 0.3) {
+  if (top < 0.3 && quoted.size === 0) {
     const best = scored.reduce((a, b) => (b.score > a.score ? b : a));
     return [best.part];
   }
 
   // Keep parts close to the best match: this admits a student who answered
   // (a)(i) and (a)(ii) together, without dragging in unrelated parts.
-  return scored
-    .filter((s) => s.score >= Math.max(0.3, top * 0.6))
-    .map((s) => s.part);
+  //
+  // Quoted parts are unioned in rather than replacing the scored ones. A
+  // student who quotes one prompt exactly and paraphrases the next was
+  // otherwise marked on the quoted part alone, losing the other.
+  return question.parts.filter(
+    (part) =>
+      quoted.has(part) ||
+      scored.some(
+        (s) => s.part === part && s.score >= Math.max(0.3, top * 0.6),
+      ),
+  );
 }
 
 /* ── Case 2 — explain from the lecturer's notes ────────────────────────── */

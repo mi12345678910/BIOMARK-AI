@@ -366,6 +366,194 @@ const CH3: Chapter = {
         },
       ],
     },
+
+    /* ────────────────────────────────────────────────────────────────────
+       ESSAY QUESTIONS
+       Marked exactly like structured ones — a longer answer is still a list
+       of scheme points. `anyOf` carries the scheme's "Any 4" / "Max 8" caps,
+       and `markPart` never awards more than the stated total, so a student
+       who lists more points than the cap allows is credited up to it.
+       ──────────────────────────────────────────────────────────────────── */
+
+    {
+      id: "c3-essay-2011",
+      session: "PSPM I 2011/2012 (Essay)",
+      number: "18",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Compare and contrast between mitosis and meiosis II.",
+          marks: 12,
+          anyOf: 8,
+          note: "Scheme: any 4 differences (2 marks each) + max 4 similarities. Total 12.",
+          points: [
+            { text: "DIFFERENCE — DNA replication occurs before mitosis; no further DNA replication before meiosis II", marks: 2, require: [["replication"], ["before"]] },
+            { text: "DIFFERENCE — In mitosis chromosomes become condensed and visible; in meiosis II they are already condensed", marks: 2, require: [["condense", "already condensed"]] },
+            { text: "DIFFERENCE — Mitosis daughter cells are genetically identical to the parent; meiosis II daughter cells are genetically different", marks: 2, require: [["genetically identical", "identical"], ["genetically different", "different"]] },
+            { text: "DIFFERENCE — Mitosis produces diploid daughter cells; meiosis II produces haploid daughter cells", marks: 2, require: [["diploid"], ["haploid"]] },
+            { text: "DIFFERENCE — Mitosis produces 2 daughter cells; meiosis II produces 4 daughter cells", marks: 2, require: [["daughter cell"], ["two", "2 daughter"], ["four", "4 daughter"]] },
+            { text: "DIFFERENCE — Mitosis occurs in somatic cells; meiosis II occurs in germ cells", marks: 2, require: [["somatic"], ["germ"]] },
+            { text: "DIFFERENCE — Sister chromatids are genetically the same in mitosis but differ genetically in meiosis II", marks: 2, require: [["sister chromatid"], ["differ", "genetically the same"]] },
+            { text: "SIMILARITY — No pairing / synapsis of homologous chromosomes", marks: 1, require: [["no pairing", "no synapsis", "without synapsis"]] },
+            { text: "SIMILARITY — No chiasmata is formed", marks: 1, require: [["no chiasmata", "chiasmata is not", "without chiasmata"]] },
+            { text: "SIMILARITY — No crossing over / exchange of genetic material occurs", marks: 1, require: [["no crossing over", "crossing over does not", "without crossing over"]] },
+            { text: "SIMILARITY — Individual chromosomes (with two sister chromatids) line up at the metaphase plate", marks: 1, require: [["metaphase plate", "equatorial"]] },
+            { text: "SIMILARITY — Spindles from opposite poles attach to the same centromere", marks: 1, require: [["spindle"], ["centromere"]] },
+            { text: "SIMILARITY — Centromere divides during anaphase", marks: 1, require: [["centromere"], ["divide", "split"]] },
+            { text: "SIMILARITY — Sister chromatids separate and move to opposite poles during anaphase", marks: 1, require: [["separate"], ["opposite pole"]] },
+            { text: "SIMILARITY — Cytokinesis occurs at the end of the process", marks: 1, require: [["cytokinesis"]] },
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Discuss the events that occur in anaphase I and their significance.",
+          marks: 8,
+          anyOf: 8,
+          note: "Scheme: 11 points listed, maximum 8 marks.",
+          points: [
+            { text: "During anaphase I, spindle fibres contract", marks: 1, require: [["spindle"], ["contract", "shorten"]] },
+            { text: "Causing the microtubules to shorten", marks: 1, require: [["microtubule"]] },
+            { text: "Pulling the centromere away from the equator", marks: 1, require: [["centromere"], ["equator", "away"]] },
+            { text: "Homologous chromosomes separate", marks: 1, require: [["homologous"], ["separate"]] },
+            { text: "And migrate towards opposite poles", marks: 1, require: [["opposite pole", "migrate"]] },
+            { text: "Causing chiasmata to break", marks: 1, require: [["chiasmata"], ["break"]] },
+            { text: "Centromere does not divide", marks: 1, require: [["centromere"], ["not divide", "do not split", "does not split"]] },
+            { text: "Sister chromatids are still attached together at their centromere", marks: 1, require: [["sister chromatid"], ["attached", "still"]] },
+            { text: "Due to the independent assortment / random orientation of homologous chromosomes on the metaphase plate", marks: 1, require: [["independent assortment", "random orientation", "random arrangement"]] },
+            { text: "Each pole receives a combination of a complete set of both parental chromosomes", marks: 1, require: [["complete set", "combination"], ["parental", "pole"]] },
+            { text: "Thus, contributes to the genetic variation", marks: 1, require: [["genetic variation", "variation"]] },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c3-essay-2014",
+      session: "PSPM I 2014/2015 (Essay)",
+      number: "19",
+      // The scene-setting sentence lives here, not in the prompt. Students
+      // copy the instruction, not the preamble, and keeping it in the prompt
+      // diluted the terms that identify this question — "describe the events
+      // of all phases in mitotic cell division" was being matched to the
+      // anaphase I essay instead.
+      intro:
+        "Mitotic cell division which occurs in all eukaryotic cells occupies the shortest period of the cell cycle.",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe the events of all phases in mitotic cell division.",
+          marks: 12,
+          note: "Scheme: 4 phases, up to 2 marks each phase. Maximum 12.",
+          points: [
+            { text: "PROPHASE — Chromatin / chromosome shortens AND thickens (condenses) and becomes visible", marks: 1, require: [["prophase"], ["condense", "shorten", "thicken"]] },
+            { text: "PROPHASE — Nuclear membrane and nucleolus disintegrate / disappear", marks: 1, require: [["nuclear membrane", "nuclear envelope", "nucleolus"], ["disintegrate", "disappear", "break"]] },
+            { text: "PROPHASE — A pair of sister chromatids attached together at the centromere", marks: 1, require: [["sister chromatid"], ["centromere"]] },
+            { text: "PROPHASE — Centrosome migrates to opposite poles / spindle fibre begins to form", marks: 1, require: [["centrosome", "spindle"], ["opposite pole", "form"]] },
+            { text: "METAPHASE — Chromosomes align at the equatorial / metaphase plate", marks: 1, require: [["metaphase"], ["align", "arrange"], ["metaphase plate", "equatorial"]] },
+            { text: "METAPHASE — Kinetochore forms at the centromere / centrosome is at the opposite poles", marks: 1, require: [["kinetochore"]] },
+            { text: "METAPHASE — Spindle fibre attached to centromere", marks: 1, require: [["spindle"], ["attach"], ["centromere"]] },
+            { text: "ANAPHASE — Spindle fibre contracts / microtubules shorten", marks: 1, require: [["anaphase"], ["contract", "shorten"]] },
+            { text: "ANAPHASE — Centromeres split", marks: 1, require: [["centromere"], ["split", "divide"]] },
+            { text: "ANAPHASE — Sister chromatids separate and move to the opposite poles", marks: 1, require: [["sister chromatid", "chromatid"], ["separate"], ["opposite pole"]] },
+            { text: "TELOPHASE — Chromosomes distributed / reach the opposite poles", marks: 1, require: [["telophase"], ["reach", "arrive", "distributed"]] },
+            { text: "TELOPHASE — Nuclear membrane and nucleoli reappear / are formed", marks: 1, require: [["nuclear membrane", "nuclear envelope", "nucleoli", "nucleolus"], ["reappear", "reform", "formed"]] },
+            { text: "TELOPHASE — Spindle fibre / microtubules disintegrate / disappear", marks: 1, require: [["spindle", "microtubule"], ["disintegrate", "disappear"]] },
+            { text: "TELOPHASE — Chromosomes uncoil and lengthen / become less dense", marks: 1, require: [["uncoil", "lengthen", "decondense", "less dense"]] },
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Compare mitotic cell division in plant and animal cells.",
+          marks: 8,
+          anyOf: 5,
+          note: "Scheme: any 2 similarities + any 3 differences (2 marks each). Maximum 8.",
+          points: [
+            { text: "SIMILARITY — Both involve 4 phases: prophase, metaphase, anaphase and telophase", marks: 1, require: [["prophase"], ["metaphase"], ["anaphase"], ["telophase"]] },
+            { text: "SIMILARITY — Both occur in somatic cells", marks: 1, require: [["somatic"]] },
+            { text: "SIMILARITY — Both produce daughter cells genetically identical to the parent cell", marks: 1, require: [["genetically identical", "identical"], ["daughter cell", "parent cell"]] },
+            { text: "DIFFERENCE — In plant prophase there are no centrioles to organise the microtubules/spindle; animal cells have centrioles", marks: 2, require: [["centriole"]] },
+            { text: "DIFFERENCE — Plant forms a cell plate; animal forms a cleavage furrow", marks: 2, require: [["cell plate"], ["cleavage furrow", "furrow"]] },
+            { text: "DIFFERENCE — In plant telophase the cell plate forms from vesicles; in animals a contractile ring forms from microfilaments / actin and myosin", marks: 2, require: [["vesicle", "contractile ring", "microfilament", "actin", "myosin"]] },
+            { text: "DIFFERENCE — Plant cytokinesis begins from the centre outwards; animal from the outside inwards", marks: 2, require: [["cytokinesis"], ["centre", "center", "outward", "inward"]] },
+            { text: "DIFFERENCE — Aster is not formed in plant cells; aster is formed in animal cells", marks: 2, require: [["aster"]] },
+            { text: "DIFFERENCE — Plant mitosis occurs in meristem cells; animal in specific organs e.g. bone marrow, skin, epithelial tissue", marks: 2, require: [["meristem"]] },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c3-essay-2015",
+      session: "PSPM I 2015/2016 (Essay)",
+      number: "20",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe the behaviour of chromosomes during mitosis.",
+          marks: 8,
+          anyOf: 8,
+          note: "Scheme: 10 points listed, maximum 8 marks.",
+          points: [
+            { text: "During early prophase, chromatin begins to coil, becoming shorter AND thicker (condensed)", marks: 1, require: [["prophase"], ["coil", "condense", "shorten", "thicken"]] },
+            { text: "Chromosomes become visible", marks: 1, require: [["visible"]] },
+            { text: "Each chromosome consists of a pair of sister chromatids joined at the centromere", marks: 1, require: [["sister chromatid"], ["centromere"]] },
+            { text: "The chromosome centromeres are attached to spindle fibres", marks: 1, require: [["centromere"], ["spindle"]] },
+            { text: "At the end of prophase, chromosomes move to the equator of the cell", marks: 1, require: [["equator"]] },
+            { text: "At metaphase, chromosomes align at the equatorial / metaphase plate", marks: 1, require: [["metaphase"], ["align", "arrange"]] },
+            { text: "At anaphase, sister chromatids separate and move to the opposite poles", marks: 1, require: [["anaphase"], ["separate"], ["opposite pole"]] },
+            { text: "At telophase, the two groups of chromosomes reach the opposite poles", marks: 1, require: [["telophase"], ["reach", "arrive"]] },
+            { text: "At the end of telophase, chromosomes uncoil / become less condensed and form a mass of chromatin again", marks: 1, require: [["uncoil", "less condense", "lengthen", "decondense"], ["chromatin"]] },
+            { text: "Each pole consists of a complete set of chromosomes enveloped in a new nucleus", marks: 1, require: [["complete set"], ["nucleus"]] },
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Explain the differences between mitosis and meiosis.",
+          marks: 12,
+          anyOf: 6,
+          note: "Scheme: any 6 differences, 2 marks each. Maximum 12.",
+          points: [
+            { text: "Mitosis occurs in somatic cells; meiosis in germ cells (megasporocyte / microsporocyte in plants)", marks: 2, require: [["somatic"], ["germ", "megasporocyte", "microsporocyte"]] },
+            { text: "No synapsis / pairing of homologous chromosomes in mitosis; synapsis occurs during prophase I of meiosis", marks: 2, require: [["synapsis", "pairing"], ["homologous"]] },
+            { text: "No chiasmata is formed in mitosis; chiasmata is formed in meiosis", marks: 2, require: [["chiasmata"]] },
+            { text: "Crossing over between non-sister chromatids does not occur in mitosis; it occurs during prophase I of meiosis", marks: 2, require: [["crossing over"], ["non-sister", "nonsister", "prophase"]] },
+            { text: "In mitotic metaphase chromosomes align at the metaphase plate; in meiosis, bivalents/tetrads align at metaphase I and chromosomes at metaphase II", marks: 2, require: [["metaphase"], ["bivalent", "tetrad"]] },
+            { text: "In mitotic anaphase sister chromatids separate; in anaphase I homologous chromosomes separate and in anaphase II sister chromatids separate", marks: 2, require: [["anaphase"], ["homologous"], ["sister chromatid"]] },
+            { text: "In mitotic anaphase the centromere splits; in anaphase I the centromere does not split", marks: 2, require: [["centromere"], ["split", "divide"]] },
+            { text: "Cytokinesis occurs once / nucleus divides once in mitosis; twice in meiosis", marks: 2, require: [["cytokinesis", "nucleus"], ["once", "twice"]] },
+            { text: "Daughter cells are genetically identical to the parent in mitosis; genetically different in meiosis", marks: 2, require: [["genetically identical", "identical"], ["genetically different", "different"]] },
+            { text: "Chromosome number in daughter cells remains the same (diploid) in mitosis; halved (haploid) in meiosis", marks: 2, require: [["diploid"], ["haploid"]] },
+            { text: "Two daughter cells are formed in mitosis; four daughter cells in meiosis", marks: 2, require: [["two", "2 daughter"], ["four", "4 daughter"]] },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: "c3-essay-2020",
+      session: "PSPM I 2020/2021 (Essay)",
+      number: "21",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Explain the behaviour of chromosomes at each stage of meiosis I.",
+          marks: 7,
+          anyOf: 7,
+          note: "Scheme: 9 points listed, maximum 7 marks.",
+          points: [
+            { text: "During Prophase I, chromosomes / chromatin condense — 'shorten AND thicken' — and become visible chromosomes", marks: 1, require: [["prophase"], ["condense", "shorten", "thicken"]] },
+            { text: "Homologous chromosomes pair up / undergo synapsis", marks: 1, require: [["homologous"], ["pair", "synapsis"]] },
+            { text: "Forming bivalents / tetrads", marks: 1, require: [["bivalent", "tetrad"]] },
+            { text: "Crossing over / exchange of genetic material occurs at chiasmata / between non-sister chromatids", marks: 1, require: [["crossing over", "exchange of genetic"], ["chiasmata", "non-sister", "nonsister"]] },
+            { text: "Pairs of homologous chromosomes / bivalents / tetrads are arranged independently on the metaphase plate during Metaphase I", marks: 1, require: [["metaphase"], ["metaphase plate", "independently", "arrange"]] },
+            { text: "During Anaphase I, homologous chromosomes separate", marks: 1, require: [["anaphase"], ["homologous"], ["separate"]] },
+            { text: "And move to opposite poles", marks: 1, require: [["opposite pole"]] },
+            { text: "Each chromosome still has two chromatids which are attached at their centromeres", marks: 1, require: [["chromatid"], ["attached", "still"], ["centromere"]] },
+            { text: "In Telophase I, chromosomes decondense / uncoil AND lengthen", marks: 1, require: [["telophase"], ["uncoil", "decondense", "lengthen"]] },
+          ],
+        },
+      ],
+    },
   ],
 };
 

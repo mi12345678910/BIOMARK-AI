@@ -36,37 +36,83 @@ export interface OcrResult {
   confidence: number;
 }
 
+export interface OcrOutcome extends OcrResult {
+  /** Set when this particular image failed; the others still return. */
+  error?: string;
+}
+
 /**
- * Recognises one image. Imported lazily so the ~2 MB worker bundle is only
- * fetched when a student actually attaches a photo.
+ * Recognises a batch of images.
+ *
+ * ONE worker, reused across every image, processed one at a time.
+ *
+ * The previous version ran `Promise.all` over `recogniseImage`, which spawned
+ * a separate worker per photo. Each carries its own ~15 MB WebAssembly heap
+ * and fetches the language data, so two or more attachments reliably fell over
+ * — the user saw a crash instead of their pages. Sequential reuse also avoids
+ * re-downloading the traineddata for every image, which makes a multi-page
+ * submission markedly faster.
+ *
+ * Failures are per-image: one unreadable photo returns an error for itself
+ * while every other page still comes back. `Promise.all` rejected the whole
+ * batch on the first failure and threw away work that had already succeeded.
  */
-export async function recogniseImage(
-  file: File | Blob,
-  fileName: string,
+export async function recogniseImages(
+  items: { file: File | Blob; name: string }[],
   onProgress?: (p: OcrProgress) => void,
-): Promise<OcrResult> {
+): Promise<OcrOutcome[]> {
+  if (items.length === 0) return [];
+
   const { createWorker } = await import("tesseract.js");
 
+  let current = items[0]!.name;
   const worker = await createWorker("eng", 1, {
     logger: (m: { status: string; progress: number }) =>
       onProgress?.({
-        file: fileName,
+        file: current,
         status: m.status,
         progress: typeof m.progress === "number" ? m.progress : null,
       }),
   });
 
+  const out: OcrOutcome[] = [];
   try {
-    const { data } = await worker.recognize(file);
-    return {
-      file: fileName,
-      text: (data.text ?? "").replace(/\s+\n/g, "\n").trim(),
-      confidence: data.confidence ?? 0,
-    };
+    for (const item of items) {
+      current = item.name;
+      try {
+        const { data } = await worker.recognize(item.file);
+        out.push({
+          file: item.name,
+          text: (data.text ?? "").replace(/\s+\n/g, "\n").trim(),
+          confidence: data.confidence ?? 0,
+        });
+      } catch (err) {
+        out.push({
+          file: item.name,
+          text: "",
+          confidence: 0,
+          error: (err as Error).message || "could not be read",
+        });
+      }
+    }
   } finally {
     // Always terminate: a leaked worker keeps a WebAssembly heap alive.
     await worker.terminate();
   }
+
+  return out;
+}
+
+/** Single-image convenience wrapper. */
+export async function recogniseImage(
+  file: File | Blob,
+  fileName: string,
+  onProgress?: (p: OcrProgress) => void,
+): Promise<OcrResult> {
+  const [only] = await recogniseImages([{ file, name: fileName }], onProgress);
+  if (!only) throw new Error("No result returned.");
+  if (only.error) throw new Error(only.error);
+  return only;
 }
 
 /** Confidence below this is unreliable enough to warn the student about. */

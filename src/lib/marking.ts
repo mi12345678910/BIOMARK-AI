@@ -118,14 +118,23 @@ export function markPart(part: QuestionPart, answer: string): PartResult {
     return { point, earned: missingGroups.length === 0, missingGroups, matched };
   });
 
-  // Apply the "Any 2" cap: credit the earned points in order until the cap.
+  // Apply the "Any 2" cap, crediting the student's HIGHEST-VALUE earned
+  // points first.
+  //
+  // Crediting in scheme order short-changed them: an essay part worth "any 2
+  // similarities (1 mark) + any 3 differences (2 marks)" caps at 5 points, and
+  // taking the first five listed gave 3 one-mark similarities before the
+  // two-mark differences — 7 out of 8 for a complete answer.
   let awarded = 0;
   let creditedPoints = 0;
   let cappedByAnyOf = false;
   const cap = part.anyOf ?? Infinity;
 
-  for (const r of results) {
-    if (!r.earned) continue;
+  const earned = results
+    .filter((r) => r.earned)
+    .sort((a, b) => b.point.marks - a.point.marks);
+
+  for (const r of earned) {
     if (creditedPoints >= cap) {
       cappedByAnyOf = true;
       break;

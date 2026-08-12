@@ -132,7 +132,7 @@ check("every part reaches full marks on a perfect answer", brokenParts.length, 0
 check(
   "structured question counts (Ch3/Ch4/Ch5)",
   CHAPTERS.map((c) => c.structured.length),
-  [2, 0, 15],
+  [6, 0, 15],
 );
 
 // ── Case 1 / Case 2 routing ───────────────────────────────────────────────
@@ -504,7 +504,6 @@ const CUSTOM_QUESTIONS = [
   "Calculate the frequency of heterozygous individuals in a population of butterflies",
   "Explain the importance of DNA replication before cell division",
   "Describe how crossing over produces genetic variation",
-  "Explain the difference between mitosis and meiosis",
   "What is the importance of the S phase in the cell cycle?",
   "How does non-disjunction cause Down syndrome?",
   "Why is meiosis important for sexual reproduction?",
@@ -720,7 +719,7 @@ check(
 // Every attachment used to be concatenated into one blob and matched once, so
 // a student who photographed two questions had the second silently discarded
 // — only the best-matching one was ever marked.
-const { routeSubmission } = await import("../src/lib/route.ts");
+const { routeSubmission, routeOne } = await import("../src/lib/route.ts");
 
 const MICE_A =
   "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice. Answer: q = 0.6, p = 0.4, black = p2 + 2pq = 0.64";
@@ -884,6 +883,86 @@ check(
     },
   ])[0]?.labels,
   ["p.jpg"],
+);
+
+// ── Chapter 3 essays must be marked, not sent to the notes ────────────────
+//
+// The bank held no essay questions at all, so every long-answer submission
+// fell through to the lecturer-notes fallback and looked like a failure to
+// grade. Essay prompts are also built from words the whole chapter shares —
+// and the student's own answer names every phase — so identification rests on
+// them quoting the instruction.
+const ESSAYS: [string, string, string][] = [
+  [
+    "compare mitosis and meiosis II",
+    "c3-essay-2011",
+    "Compare and contrast between mitosis and meiosis II. Answer: DNA replication occurs before mitosis but no further DNA replication before meiosis II. Daughter cells are genetically identical to parent in mitosis but genetically different in meiosis II. Mitosis produces 2 daughter cells, meiosis II produces 4 daughter cells. Mitosis occurs in somatic cells while meiosis II occurs in germ cells. No chiasmata is formed in both. Cytokinesis occurs at the end of the process.",
+  ],
+  [
+    "anaphase I events",
+    "c3-essay-2011",
+    "Discuss the events that occur in anaphase I and their significance. Answer: spindle fibres contract, microtubules shorten, homologous chromosomes separate and migrate towards opposite poles, chiasmata break, the centromere does not divide, sister chromatids are still attached at their centromere, due to independent assortment this contributes to genetic variation.",
+  ],
+  [
+    "all phases of mitosis",
+    "c3-essay-2014",
+    "Describe the events of all phases in mitotic cell division. Answer: In prophase chromatin shortens and thickens and becomes visible, nuclear membrane and nucleolus disintegrate. In metaphase chromosomes align at the metaphase plate and spindle fibre attached to centromere. In anaphase centromeres split and sister chromatids separate and move to the opposite poles. In telophase chromosomes reach the opposite poles, nuclear membrane reappear, spindle fibre disintegrate and chromosomes uncoil and lengthen.",
+  ],
+  [
+    "plant vs animal mitosis",
+    "c3-essay-2014",
+    "Compare mitotic cell division in plant and animal cells. Answer: Both involve 4 phases prophase metaphase anaphase telophase and both occur in somatic cells. In plant there are no centrioles, a cell plate is formed from vesicles, cytokinesis begins from the centre outwards and no aster is formed. Animal cells have centrioles, form a cleavage furrow with a contractile ring of actin and myosin, and aster is formed.",
+  ],
+  [
+    "chromosome behaviour in mitosis",
+    "c3-essay-2015",
+    "Describe the behaviour of chromosomes during mitosis. Answer: during early prophase chromatin begins to coil becoming shorter and thicker, chromosomes become visible, each chromosome consists of a pair of sister chromatids joined at the centromere, centromeres attached to spindle fibres, at metaphase chromosomes align at the equatorial plate, at anaphase sister chromatids separate and move to opposite poles, at telophase chromosomes reach the opposite poles and uncoil to form chromatin, each pole has a complete set of chromosomes in a new nucleus.",
+  ],
+  [
+    "differences mitosis vs meiosis",
+    "c3-essay-2015",
+    "Explain the differences between mitosis and meiosis. Answer: mitosis occurs in somatic cells while meiosis occurs in germ cells. No synapsis or pairing of homologous chromosome in mitosis. No chiasmata is formed in mitosis but chiasmata is formed in meiosis. Crossing over between non-sister chromatids occurs during prophase I. Cytokinesis occurs once in mitosis and twice in meiosis. Daughter cells genetically identical in mitosis but genetically different in meiosis. Chromosome number remains diploid in mitosis but is halved to haploid in meiosis.",
+  ],
+  [
+    "meiosis I chromosome behaviour",
+    "c3-essay-2020",
+    "Explain the behaviour of chromosomes at each stage of meiosis I. Answer: During prophase I chromosomes condense and become visible, homologous chromosomes pair up forming bivalents, crossing over occurs at chiasmata between non-sister chromatids. During metaphase I bivalents arranged independently on the metaphase plate. During anaphase I homologous chromosomes separate and move to opposite poles, centromere does not split. In telophase I chromosomes uncoil and lengthen.",
+  ],
+];
+
+const essayMisrouted: string[] = [];
+const essayUnmarked: string[] = [];
+for (const [label, wantId, text] of ESSAYS) {
+  const r = routeOne(text);
+  if (r.mode !== "graded") {
+    essayUnmarked.push(`${label} -> ${r.mode}`);
+    continue;
+  }
+  if (r.match.question.id !== wantId) {
+    essayMisrouted.push(` ->  (wanted )`);
+  }
+}
+if (essayUnmarked.length) essayUnmarked.forEach((u) => console.log(`  ! ${u}`));
+if (essayMisrouted.length) essayMisrouted.forEach((m) => console.log(`  ! `));
+check("every essay is graded, not sent to notes", essayUnmarked.length, 0);
+check("every essay is matched to the right paper", essayMisrouted.length, 0);
+
+// A complete essay answer should reach full marks.
+const fullEssay = routeOne(ESSAYS[6]![2]);
+check(
+  "a complete essay answer scores full marks",
+  fullEssay.mode === "graded"
+    ? `${fullEssay.result.awarded}/${fullEssay.result.maximum}`
+    : fullEssay.mode,
+  "7/7",
+);
+
+// The "Any N" cap must credit the student's best points, not the first listed.
+const mixed = findStructured("c3-essay-2014")!.q.parts.find((p) => p.ref === "(b)")!;
+check(
+  "an Any-N cap credits the highest-value points first",
+  markPart(mixed, mixed.points.map((p) => p.text).join(". ")).awarded,
+  8,
 );
 
 console.log(`\n${pass} passed, ${fail} failed`);

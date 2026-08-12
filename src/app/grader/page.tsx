@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimalCell, DnaHelix, PlantCell } from "@/components/BioArt";
 import { useI18n } from "@/lib/i18n";
-import { LOW_CONFIDENCE, recogniseImage } from "@/lib/ocr";
+import { LOW_CONFIDENCE, recogniseImages } from "@/lib/ocr";
 import { routeSubmission, type Routed, type RoutedSegment } from "@/lib/route";
 
 interface Attachment {
@@ -17,6 +17,8 @@ interface Attachment {
   /** Filled in after OCR runs. */
   ocrText?: string;
   ocrConfidence?: number;
+  /** Set when this one image failed; other pages still return. */
+  ocrError?: string;
 }
 
 type Outcome =
@@ -78,22 +80,30 @@ export default function GraderPage() {
       setBusy(true);
       setOutcome(null);
       try {
-        const results = await Promise.all(
-          images.map(async (att) => {
-            const r = await recogniseImage(att.file, att.name, (p) =>
-              setProgress(
-                `${p.file}: ${p.status}${
-                  p.progress !== null ? ` ${Math.round(p.progress * 100)}%` : ""
-                }`,
-              ),
-            );
-            return { id: att.id, ...r };
-          }),
+        // Sequential, sharing one worker. One worker per image meant two
+        // attachments exhausted memory and the whole submission failed.
+        const results = await recogniseImages(
+          images.map((att) => ({ file: att.file, name: att.name })),
+          (p) =>
+            setProgress(
+              `${p.file}: ${p.status}${
+                p.progress !== null ? ` ${Math.round(p.progress * 100)}%` : ""
+              }`,
+            ),
         );
+
+        // Results come back in the order submitted, so pair them by index —
+        // two photos can share a file name.
+        const byId = new Map(images.map((att, i) => [att.id, results[i]]));
         scanned = files.map((f) => {
-          const hit = results.find((r) => r.id === f.id);
+          const hit = byId.get(f.id);
           return hit
-            ? { ...f, ocrText: hit.text, ocrConfidence: hit.confidence }
+            ? {
+                ...f,
+                ocrText: hit.text,
+                ocrConfidence: hit.confidence,
+                ocrError: hit.error,
+              }
             : f;
         });
         setFiles(scanned);
