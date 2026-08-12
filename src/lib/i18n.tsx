@@ -101,6 +101,7 @@ const STRINGS = {
     quizComplete: "Quiz complete",
     finalScore: "Final score",
 
+    typedAnswer: "Typed answer",
     scanning: "Reading your photos…",
     ocrHeading: "Text read from your photos",
     ocrCaveat:
@@ -240,6 +241,7 @@ const STRINGS = {
     quizComplete: "Kuiz selesai",
     finalScore: "Markah akhir",
 
+    typedAnswer: "Jawapan ditaip",
     scanning: "Membaca foto anda…",
     ocrHeading: "Teks yang dibaca daripada foto anda",
     ocrCaveat:

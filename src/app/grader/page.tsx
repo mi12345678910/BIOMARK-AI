@@ -3,22 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimalCell, DnaHelix, PlantCell } from "@/components/BioArt";
 import { useI18n } from "@/lib/i18n";
-import { markQuestion, type QuestionResult } from "@/lib/marking";
-import {
-  findQuestionMatch,
-  hasAttempt,
-  searchNotes,
-  selectRelevantParts,
-  type NoteMatch,
-  type QuestionMatch,
-} from "@/lib/lookup";
-import type { QuestionPart } from "@/lib/marking";
 import { LOW_CONFIDENCE, recogniseImage } from "@/lib/ocr";
-import {
-  findDiagram,
-  isDrawingQuestion,
-  type DiagramAnswer,
-} from "@/data/diagrams";
+import { routeSubmission, type Routed, type RoutedSegment } from "@/lib/route";
 
 interface Attachment {
   id: string;
@@ -34,18 +20,8 @@ interface Attachment {
 }
 
 type Outcome =
-  | {
-      mode: "graded";
-      match: QuestionMatch;
-      result: QuestionResult;
-      /** Lecturer-notes material covering whatever they got wrong. */
-      notes: NoteMatch[];
-    }
-  /** Question submitted with no attempt — show how the marks are awarded. */
-  | { mode: "modelAnswer"; match: QuestionMatch; parts: QuestionPart[] }
-  /** A drawing question — answered with the diagram, never marked. */
-  | { mode: "diagram"; diagram: DiagramAnswer }
-  | { mode: "explained"; notes: NoteMatch[] }
+  /** One entry per question found — a submission can hold several. */
+  | { mode: "results"; items: RoutedSegment[] }
   | { mode: "ocrFailed"; message: string }
   | { mode: "empty" };
 
@@ -131,74 +107,16 @@ export default function GraderPage() {
       setProgress("");
     }
 
-    // Typed text plus everything read out of the photos.
-    const combined = [
-      text.trim(),
-      ...scanned.map((f) => f.ocrText ?? "").filter(Boolean),
-    ]
-      .filter(Boolean)
-      .join("\n\n");
+    // Each source stays its own segment. Concatenating them into one blob and
+    // matching once meant a student who attached two questions only ever got
+    // the first one marked — the second was silently dropped.
+    const segments = [
+      { label: t("typedAnswer"), text: text.trim() },
+      ...scanned.map((f) => ({ label: f.name, text: f.ocrText ?? "" })),
+    ];
 
-    if (!combined.trim()) {
-      setOutcome({ mode: "empty" });
-      return;
-    }
-
-    // Drawing questions are checked FIRST and never marked. Nothing here can
-    // read a hand-drawn diagram, so scoring one would be guesswork — the
-    // student gets the diagram, its required labels, and the mark split.
-    if (isDrawingQuestion(combined)) {
-      const diagram = findDiagram(combined);
-      if (diagram) {
-        setOutcome({ mode: "diagram", diagram });
-        return;
-      }
-      // Asked to draw something we have no diagram for — the notes are still
-      // more useful than a spurious score.
-      setOutcome({ mode: "explained", notes: searchNotes(combined, 3) });
-      return;
-    }
-
-    const match = findQuestionMatch(combined);
-    if (match) {
-      // Mark ONLY the parts the student actually asked about. Marking every
-      // part of the stored question scored them against work they never
-      // attempted and made one answer look like several.
-      const parts = selectRelevantParts(match.question, combined);
-
-      // Question submitted with no attempt: marking it would report 0 for
-      // every scheme point, which tells the student nothing. Show the model
-      // answer and the mark allocation instead.
-      if (!hasAttempt(match.question, combined)) {
-        setOutcome({ mode: "modelAnswer", match, parts });
-        return;
-      }
-
-      const answers: Record<string, string> = {};
-      for (const part of parts) answers[part.ref] = combined;
-      const result = markQuestion(parts, answers);
-
-      // Explain what went wrong, not just that it did. Search the notes using
-      // the scheme points they missed, so the material is about the specific
-      // concept behind the lost marks rather than the topic in general.
-      const missedText = result.parts
-        .flatMap((pr) => pr.results.filter((r) => !r.earned))
-        .map((r) => `${r.point.text} ${r.missingGroups.flat().join(" ")}`)
-        .join(" ");
-
-      setOutcome({
-        mode: "graded",
-        match,
-        result,
-        notes: missedText.trim()
-          ? searchNotes(missedText, 2, match.chapterNumber)
-          : [],
-      });
-      return;
-    }
-
-    // Case 2 — explain from the lecturer's notes.
-    setOutcome({ mode: "explained", notes: searchNotes(combined, 3) });
+    const items = routeSubmission(segments);
+    setOutcome(items.length === 0 ? { mode: "empty" } : { mode: "results", items });
   }
 
   const canSubmit = text.trim().length > 0 || files.some((f) => f.preview);
@@ -405,7 +323,111 @@ export default function GraderPage() {
       )}
 
       {/* ── Case 1: graded against the scheme ─────────────────────── */}
-      {outcome?.mode === "graded" && (
+      {outcome?.mode === "results" &&
+        outcome.items.map((item, i) => (
+          <ResultCard key={i} item={item} index={i} total={outcome.items.length} />
+        ))}
+    </div>
+  );
+}
+
+/**
+ * The FIGURE or TABLE a structured question refers to.
+ *
+ * The scans are black line art on white, so they get a white plate — on the
+ * dark theme they would otherwise be black-on-near-black and invisible.
+ */
+function QuestionFigure({ src, intro }: { src?: string; intro?: string }) {
+  if (!intro && !src) return null;
+  return (
+    <div>
+      {intro && (
+        <p className="rounded-xl bg-teal-700/5 px-4 py-3 text-sm leading-relaxed text-[#14343f]/85 dark:bg-white/5 dark:text-slate-200">
+          {intro}
+        </p>
+      )}
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt="Figure for this question"
+          className="mx-auto mt-3 max-h-64 w-auto max-w-full rounded-xl bg-white p-3"
+        />
+      )}
+    </div>
+  );
+}
+
+function KeywordRow({
+  label,
+  items,
+  tone,
+}: {
+  label: string;
+  items: string[];
+  tone: "found" | "missed";
+}) {
+  return (
+    <div className="mt-2">
+      <p
+        className={`text-[11px] font-bold uppercase tracking-wider ${
+          tone === "found"
+            ? "text-emerald-800 dark:text-emerald-200"
+            : "text-coral-800 dark:text-coral-200"
+        }`}
+      >
+        {label}
+      </p>
+      <div className="mt-1 flex flex-wrap gap-1.5">
+        {items.map((k, i) => (
+          <span
+            key={i}
+            className={`rounded-md px-2 py-0.5 text-xs font-medium ${
+              tone === "found"
+                ? "bg-emerald-500/30 text-emerald-950 dark:text-emerald-50"
+                : "bg-coral-500/30 text-coral-950 dark:text-coral-50"
+            }`}
+          >
+            {k}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One question's result.
+ *
+ * A submission can contain several — two photos of two different questions
+ * produce two of these. The source labels are shown only when there is more
+ * than one, so a single typed answer stays uncluttered.
+ */
+function ResultCard({
+  item,
+  index,
+  total,
+}: {
+  item: RoutedSegment;
+  index: number;
+  total: number;
+}) {
+  const { lang, t } = useI18n();
+  const routed: Routed = item.routed;
+
+  return (
+    <div className="space-y-2">
+      {total > 1 && (
+        <div className="flex flex-wrap items-center gap-2 px-1">
+          <span className="rounded-full bg-teal-700 px-2.5 py-0.5 text-xs font-bold text-white">
+            {index + 1} / {total}
+          </span>
+          <span className="text-xs font-medium text-[#14343f]/70 dark:text-slate-300">
+            {item.labels.join("  +  ")}
+          </span>
+        </div>
+      )}
+      {routed.mode === "graded" && (
         <section className="overflow-hidden rounded-3xl border border-teal-700/15 bg-white/95 shadow-xl backdrop-blur dark:border-white/20 dark:bg-white/10">
           <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-teal-700 to-teal-600 px-6 py-3">
             <div>
@@ -413,21 +435,21 @@ export default function GraderPage() {
                 {t("resultTitle")}
               </h2>
               <p className="text-[11px] text-teal-100">
-                {t("markedAgainst")}: {t("pickChapter")} {outcome.match.chapterNumber} ·{" "}
-                {outcome.match.question.session} · Q{outcome.match.question.number}
+                {t("markedAgainst")}: {t("pickChapter")} {routed.match.chapterNumber} ·{" "}
+                {routed.match.question.session} · Q{routed.match.question.number}
               </p>
             </div>
             <span className="rounded-full bg-white/25 px-4 py-1.5 text-base font-bold text-white">
-              {outcome.result.awarded} / {outcome.result.maximum}
+              {routed.result.awarded} / {routed.result.maximum}
             </span>
           </div>
 
           <div className="space-y-6 px-6 py-5">
             <QuestionFigure
-              src={outcome.match.question.figure}
-              intro={outcome.match.question.intro}
+              src={routed.match.question.figure}
+              intro={routed.match.question.intro}
             />
-            {outcome.result.parts.map((pr) => (
+            {routed.result.parts.map((pr) => (
               <div key={pr.part.ref}>
                 <div className="flex items-baseline gap-2">
                   <span className="font-bold text-teal-700 dark:text-teal-200">
@@ -501,7 +523,7 @@ export default function GraderPage() {
 
             {/* Why the lost marks were lost — the lecturer's own material on
                 the concepts behind the missed scheme points. */}
-            {outcome.notes.length > 0 && (
+            {routed.notes.length > 0 && (
               <div className="border-t border-teal-700/15 pt-5 dark:border-white/15">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
                   {t("whyTitle")}
@@ -511,7 +533,7 @@ export default function GraderPage() {
                 </p>
 
                 <div className="mt-3 space-y-4">
-                  {outcome.notes.map((n, i) => (
+                  {routed.notes.map((n, i) => (
                     <article
                       key={i}
                       className="rounded-2xl border border-teal-700/15 bg-teal-700/5 p-4 dark:border-white/15 dark:bg-white/5"
@@ -540,7 +562,7 @@ export default function GraderPage() {
               </div>
             )}
 
-            {outcome.result.awarded === outcome.result.maximum && (
+            {routed.result.awarded === routed.result.maximum && (
               <p className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-900 dark:text-emerald-100">
                 {t("fullMarksNote")}
               </p>
@@ -550,24 +572,24 @@ export default function GraderPage() {
       )}
 
       {/* ── Question only: show how the marks are awarded ─────────── */}
-      {outcome?.mode === "modelAnswer" && (
+      {routed.mode === "modelAnswer" && (
         <section className="overflow-hidden rounded-3xl border border-teal-700/15 bg-white/95 shadow-xl backdrop-blur dark:border-white/20 dark:bg-white/10">
           <div className="bg-gradient-to-r from-[#14343f] to-teal-800 px-6 py-3">
             <h2 className="text-sm font-bold uppercase tracking-wider text-white">
               {t("modelTitle")}
             </h2>
             <p className="text-[11px] text-teal-100">
-              {t("markedAgainst")}: {outcome.match.question.session} · Q
-              {outcome.match.question.number} — {t("modelSubtitle")}
+              {t("markedAgainst")}: {routed.match.question.session} · Q
+              {routed.match.question.number} — {t("modelSubtitle")}
             </p>
           </div>
 
           <div className="space-y-6 px-6 py-5">
             <QuestionFigure
-              src={outcome.match.question.figure}
-              intro={outcome.match.question.intro}
+              src={routed.match.question.figure}
+              intro={routed.match.question.intro}
             />
-            {outcome.parts.map((part) => (
+            {routed.parts.map((part) => (
               <div key={part.ref}>
                 <div className="flex items-baseline gap-2">
                   <span className="font-bold text-teal-700 dark:text-teal-200">
@@ -627,7 +649,7 @@ export default function GraderPage() {
       )}
 
       {/* ── Drawing question: answer with the diagram ─────────────── */}
-      {outcome?.mode === "diagram" && (
+      {routed.mode === "diagram" && (
         <section className="overflow-hidden rounded-3xl border border-teal-700/15 bg-white/95 shadow-xl backdrop-blur dark:border-white/20 dark:bg-white/10">
           <div className="bg-gradient-to-r from-[#14343f] to-teal-800 px-6 py-3">
             <h2 className="text-sm font-bold uppercase tracking-wider text-white">
@@ -638,16 +660,16 @@ export default function GraderPage() {
 
           <div className="space-y-5 px-6 py-5">
             <h3 className="text-base font-bold text-[#14343f] dark:text-white">
-              {lang === "bm" ? outcome.diagram.titleBm : outcome.diagram.title}
+              {lang === "bm" ? routed.diagram.titleBm : routed.diagram.title}
               <span className="ml-2 rounded-full bg-teal-700/15 px-2.5 py-0.5 text-xs font-semibold text-teal-800 dark:bg-white/15 dark:text-teal-100">
-                {t("pickChapter")} {outcome.diagram.chapter}
+                {t("pickChapter")} {routed.diagram.chapter}
               </span>
             </h3>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={outcome.diagram.image}
-              alt={outcome.diagram.title}
+              src={routed.diagram.image}
+              alt={routed.diagram.title}
               className="w-full rounded-2xl bg-white p-3"
             />
 
@@ -656,7 +678,7 @@ export default function GraderPage() {
                 {t("diagramLabels")}
               </h4>
               <ul className="mt-2 space-y-1.5">
-                {outcome.diagram.labels.map((l, i) => (
+                {routed.diagram.labels.map((l, i) => (
                   <li
                     key={i}
                     className="flex gap-2 rounded-lg bg-emerald-400/10 px-3 py-2 text-sm text-[#14343f] dark:text-slate-100"
@@ -676,8 +698,8 @@ export default function GraderPage() {
               </h4>
               <p className="mt-1.5 text-sm leading-relaxed text-[#14343f]/90 dark:text-slate-100">
                 {lang === "bm"
-                  ? outcome.diagram.guidanceBm
-                  : outcome.diagram.guidance}
+                  ? routed.diagram.guidanceBm
+                  : routed.diagram.guidance}
               </p>
             </div>
 
@@ -689,7 +711,7 @@ export default function GraderPage() {
       )}
 
       {/* ── Case 2: explained from lecturer notes ─────────────────── */}
-      {outcome?.mode === "explained" && (
+      {routed.mode === "explained" && (
         <section className="overflow-hidden rounded-3xl border border-teal-700/15 bg-white/95 shadow-xl backdrop-blur dark:border-white/20 dark:bg-white/10">
           <div className="bg-gradient-to-r from-[#14343f] to-teal-800 px-6 py-3">
             <h2 className="text-sm font-bold uppercase tracking-wider text-white">
@@ -699,12 +721,12 @@ export default function GraderPage() {
           </div>
 
           <div className="space-y-5 px-6 py-5">
-            {outcome.notes.length === 0 ? (
+            {routed.notes.length === 0 ? (
               <p className="text-sm text-[#14343f]/80 dark:text-slate-200">
                 {t("explainNothing")}
               </p>
             ) : (
-              outcome.notes.map((n, i) => (
+              routed.notes.map((n, i) => (
                 <article
                   key={i}
                   className="rounded-2xl border border-teal-700/15 bg-teal-700/5 p-4 dark:border-white/15 dark:bg-white/5"
@@ -733,71 +755,6 @@ export default function GraderPage() {
           </div>
         </section>
       )}
-    </div>
-  );
-}
-
-/**
- * The FIGURE or TABLE a structured question refers to.
- *
- * The scans are black line art on white, so they get a white plate — on the
- * dark theme they would otherwise be black-on-near-black and invisible.
- */
-function QuestionFigure({ src, intro }: { src?: string; intro?: string }) {
-  if (!intro && !src) return null;
-  return (
-    <div>
-      {intro && (
-        <p className="rounded-xl bg-teal-700/5 px-4 py-3 text-sm leading-relaxed text-[#14343f]/85 dark:bg-white/5 dark:text-slate-200">
-          {intro}
-        </p>
-      )}
-      {src && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt="Figure for this question"
-          className="mx-auto mt-3 max-h-64 w-auto max-w-full rounded-xl bg-white p-3"
-        />
-      )}
-    </div>
-  );
-}
-
-function KeywordRow({
-  label,
-  items,
-  tone,
-}: {
-  label: string;
-  items: string[];
-  tone: "found" | "missed";
-}) {
-  return (
-    <div className="mt-2">
-      <p
-        className={`text-[11px] font-bold uppercase tracking-wider ${
-          tone === "found"
-            ? "text-emerald-800 dark:text-emerald-200"
-            : "text-coral-800 dark:text-coral-200"
-        }`}
-      >
-        {label}
-      </p>
-      <div className="mt-1 flex flex-wrap gap-1.5">
-        {items.map((k, i) => (
-          <span
-            key={i}
-            className={`rounded-md px-2 py-0.5 text-xs font-medium ${
-              tone === "found"
-                ? "bg-emerald-500/30 text-emerald-950 dark:text-emerald-50"
-                : "bg-coral-500/30 text-coral-950 dark:text-coral-50"
-            }`}
-          >
-            {k}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }

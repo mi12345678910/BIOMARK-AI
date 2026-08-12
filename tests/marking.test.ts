@@ -715,5 +715,92 @@ check(
   ["(b)"],
 );
 
+// ── Several photos must produce several results ───────────────────────────
+//
+// Every attachment used to be concatenated into one blob and matched once, so
+// a student who photographed two questions had the second silently discarded
+// — only the best-matching one was ever marked.
+const { routeSubmission } = await import("../src/lib/route.ts");
+
+const MICE_A =
+  "In a randomly breeding population of mice, black coat (H) is dominant to white coat (h). In the population, 36% have white coats. Calculate the phenotype frequency of black coat mice. Answer: q = 0.6, p = 0.4, black = p2 + 2pq = 0.64";
+const WOLVES =
+  "In a population of 6000 wolves, 26 are albino. Calculate the allele frequencies for A and a. Answer: q2 = 0.004, q = 0.063, p = 0.937";
+const SNAILS =
+  "In a population of 1000 snails that mate randomly, 800 are grey. Calculate the dominant and recessive allele frequencies. Answer: q2 = 0.2, q = 0.447, p = 0.553";
+
+const summarise = (segs: { label: string; text: string }[]) =>
+  routeSubmission(segs).map((it) =>
+    it.routed.mode === "graded"
+      ? `${it.routed.match.question.id}:${it.routed.result.awarded}/${it.routed.result.maximum}`
+      : it.routed.mode,
+  );
+
+check(
+  "two photos of two questions give two marked results",
+  summarise([
+    { label: "typed", text: "" },
+    { label: "p1.jpg", text: MICE_A },
+    { label: "p2.jpg", text: WOLVES },
+  ]),
+  ["c5-ups2-2005:3/3", "c5-pspm1-2023:4/4"],
+);
+
+check(
+  "three photos give three results",
+  summarise([
+    { label: "typed", text: "" },
+    { label: "a.jpg", text: MICE_A },
+    { label: "b.jpg", text: WOLVES },
+    { label: "c.jpg", text: SNAILS },
+  ]).length,
+  3,
+);
+
+check(
+  "typed text and a photo are separate questions",
+  summarise([
+    { label: "typed", text: MICE_A },
+    { label: "x.jpg", text: WOLVES },
+  ]),
+  ["c5-ups2-2005:3/3", "c5-pspm1-2023:4/4"],
+);
+
+// One question spread over two pages must stay ONE result, not two halves.
+const merged = routeSubmission([
+  { label: "typed", text: "" },
+  {
+    label: "p1.jpg",
+    text: "1. (a)(i) State the Hardy-Weinberg Principle. Answer: allele and genotype frequencies remain constant in genetic equilibrium. (ii) List TWO conditions. Answer: no mutation, no migration.",
+  },
+  {
+    label: "p2.jpg",
+    text: "(b) In a randomly breeding population of mice, 36% have white coats. Calculate the phenotype frequency of black coat mice. Answer: q = 0.6, p = 0.4, 0.64",
+  },
+]);
+check("one question across two pages stays one result", merged.length, 1);
+check("both pages are credited as the source", merged[0]?.labels, [
+  "p1.jpg",
+  "p2.jpg",
+]);
+check(
+  "and all its sub-parts are marked together",
+  merged[0]?.routed.mode === "graded"
+    ? merged[0].routed.result.parts.map((p) => p.part.ref)
+    : [],
+  ["(a)(i)", "(a)(ii)", "(b)"],
+);
+
+// Empty segments must not create empty result cards.
+check(
+  "blank segments are ignored",
+  routeSubmission([
+    { label: "typed", text: "   " },
+    { label: "a.jpg", text: "" },
+    { label: "b.jpg", text: MICE_A },
+  ]).length,
+  1,
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
