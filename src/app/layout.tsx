@@ -5,7 +5,7 @@ import { LanguageProvider } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BioMark AI — KPM Matriculation Biology Grader",
+  title: "BioMark AI 2.0 — KPM Matriculation Biology Grader",
   description:
     "Grade KPM Matriculation Biology answers against the official PSPM marking scheme. Point-by-point marks, keyword feedback, and rendered diagrams.",
 };
@@ -30,7 +30,7 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="border-t border-teal-900/10 py-7 text-center text-xs text-[#14343f]/65 dark:border-white/10 dark:text-slate-300">
-            BioMark AI · Marks are indicative — always confirm against your
+            BioMark AI 2.0 · Marks are indicative — always confirm against your
             lecturer&rsquo;s official scheme
           </footer>
         </LanguageProvider>

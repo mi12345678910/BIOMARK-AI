@@ -24,7 +24,7 @@ export default function Navbar() {
           </span>
           <span className="hidden flex-col leading-tight sm:flex">
             <span className="text-base font-bold tracking-tight text-[#14343f] dark:text-white">
-              BioMark <span className="text-coral-500">AI</span>
+              BioMark <span className="text-coral-500">AI 2.0</span>
             </span>
             <span className="text-[10px] font-medium text-[#14343f]/65 dark:text-slate-400">
               {t("tagline")}
