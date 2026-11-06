@@ -32,6 +32,7 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
@@ -41,6 +42,14 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Tell the browser too, not just our own styles. Without this it drew its
+     native parts — the chapter dropdown's list, scrollbars — in light theme,
+     so the list was white while its text took the page's near-white colour:
+     white on white, unreadable. */
+  html {
+    color-scheme: dark;
+  }
+
   body {
     background-color: #0b1f26;
     @apply text-slate-100;

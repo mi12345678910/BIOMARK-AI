@@ -88,7 +88,13 @@ export default function QuizPage() {
             className="w-full rounded-xl border border-teal-700/20 bg-white px-3 py-2.5 text-sm text-[#14343f] outline-none focus:border-teal-500 dark:border-white/15 dark:bg-white/5 dark:text-slate-100"
           >
             {CHAPTERS.map((c) => (
-              <option key={c.id} value={c.id}>
+              // Explicit colours as well as color-scheme: some browsers draw
+              // the open list with their own background and ignore the page's.
+              <option
+                key={c.id}
+                value={c.id}
+                className="bg-white text-[#14343f] dark:bg-[#0b1f26] dark:text-slate-100"
+              >
                 {c.number}. {lang === "bm" ? c.bm : c.en} ({c.mcq.length})
               </option>
             ))}
