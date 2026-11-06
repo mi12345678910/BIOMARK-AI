@@ -758,6 +758,46 @@ export interface NoteMatch {
   score: number;
   /** Terms from the student's text that this section covers. */
   matchedTerms: string[];
+  /**
+   * The lines of the section that bear on the query, in their original order.
+   *
+   * Showing a section's first few lines instead was the bug: for a missed
+   * "DNA is replicated" point the right section was found, but its first six
+   * lines covered G1, G2 and M — the S-phase line sat tenth and was cut off,
+   * so the explanation looked unrelated to the mark that was lost.
+   */
+  lines: string[];
+}
+
+/**
+ * Pick the lines of a note section that relate to the query terms.
+ *
+ * Lines are ranked by how many query terms they contain and the best `max`
+ * kept in their original order. A short line directly above a chosen one is
+ * kept too, because the notes use them as headings — "S phase (Synthesis
+ * Phase)" is what makes "DNA replication occurs." readable on its own.
+ * Falls back to the opening lines only when nothing in the section matches.
+ */
+function relevantLines(section: NoteSection, terms: string[], max = 6): string[] {
+  const scored = section.content.map((line, i) => {
+    const l = line.toLowerCase();
+    return { i, hits: terms.filter((t) => l.includes(t)).length };
+  });
+
+  const chosen = scored
+    .filter((s) => s.hits > 0)
+    .sort((a, b) => b.hits - a.hits || a.i - b.i)
+    .slice(0, max)
+    .map((s) => s.i);
+
+  if (chosen.length === 0) return section.content.slice(0, max);
+
+  const keep = new Set(chosen);
+  for (const i of chosen) {
+    const above = section.content[i - 1];
+    if (i > 0 && above && above.length <= 40 && !keep.has(i - 1)) keep.add(i - 1);
+  }
+  return [...keep].sort((a, b) => a - b).map((i) => section.content[i]!);
 }
 
 /**
@@ -802,7 +842,7 @@ export function searchNotes(
       if (preferChapter !== undefined && section.chapter === preferChapter) {
         final *= 2;
       }
-      scored.push({ section, score: final, matchedTerms });
+      scored.push({ section, score: final, matchedTerms, lines: relevantLines(section, terms) });
     }
   }
 

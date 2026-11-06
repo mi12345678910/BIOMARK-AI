@@ -1289,6 +1289,21 @@ check(
   check("BM is used when chosen", mcqText(all[0]!, "bm").stem, MCQ_BM[all[0]!.id]!.stem);
 }
 
+// ── "Why you lost those marks" shows the lines about the missed point ─────
+// The right note section was found, but only its first six lines were shown —
+// G1, G2 and M — while the S-phase line about DNA replication sat tenth.
+{
+  const r = routeSubmission([
+    {
+      label: "p.jpg",
+      text: "PSPM I 2018/2019\n1. (a) FIGURE 1 shows a cell cycle.\n(iii) Explain the importance of phase R. Answer: maintain the same number of chromosomes in daughter cells and double the genome",
+    },
+  ])[0]!.routed;
+  const lines = r.mode === "graded" ? r.notes.flatMap((n) => n.lines) : [];
+  check("the missed DNA-replication point brings up the S-phase line", lines.some((l) => /DNA replication occurs/i.test(l)), true);
+  check("with its heading for context", lines.some((l) => /^S phase/i.test(l)), true);
+}
+
 // ── Marked results come before notes-only explanations ────────────────────
 // A stray fragment of scanned text routes to the notes; in scan order it was
 // shown first, ahead of the student's actual mark.

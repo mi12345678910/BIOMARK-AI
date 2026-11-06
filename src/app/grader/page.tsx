@@ -590,7 +590,10 @@ function ResultCard({
                         {n.section.outcome}
                       </h4>
                       <ul className="mt-2 space-y-1.5">
-                        {n.section.content.slice(0, 6).map((c, ci) => (
+                        {/* The lines about what was missed — not simply the
+                            section's opening lines, which can be about a
+                            different stage entirely. */}
+                        {n.lines.map((c, ci) => (
                           <li
                             key={ci}
                             className="flex gap-2 text-sm leading-relaxed text-[#14343f]/90 dark:text-slate-100"
