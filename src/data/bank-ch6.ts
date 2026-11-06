@@ -1,0 +1,1065 @@
+/**
+ * CHAPTER 6 — EXPRESSION OF BIOLOGICAL INFORMATION
+ *
+ * Transcribed from the KMJ 2026/2027 tutorial ("Chapter 6 26-27") and its
+ * official scheme ("CHAPTER 6 EXPRESSION OF BIOLOGICAL INFORMATION 26-27").
+ * Question numbers, sessions and part labels are exactly as printed.
+ *
+ * See bank.ts for how `require` groups work. "=" before an alternative means
+ * whole-word only.
+ */
+
+import type { Chapter } from "./bank.ts";
+import type { SchemePoint } from "../lib/marking.ts";
+
+const pt = (text: string, marks: number, require: string[][], group?: string): SchemePoint =>
+  group ? { text, marks, require, group } : { text, marks, require };
+
+const POL3 = ["polymerase iii", "polymerase 3", "pol iii"];
+const POL1 = ["polymerase i", "polymerase 1", "pol i"];
+const FIVE_TO_THREE = ["5' to 3'", "5'-3'", "5' 3'", "5 to 3"];
+
+/** Replication vs transcription — the same five rows appear in Q2(e) and Q3(f). */
+const REPLICATION_VS_TRANSCRIPTION: SchemePoint[] = [
+  pt("Replication: both strands act as a template // Transcription: only one strand acts as template", 1, [["both strand", "two strand"], ["one strand", "only one"]]),
+  pt("Replication: produces (double-stranded) DNA strand // Transcription: produces (single-stranded) mRNA strand", 1, [["dna strand", "double strand", "double-strand"], ["mrna", "rna strand"]]),
+  pt("Replication: whole DNA genome is copied // Transcription: only a part of the DNA genome is copied", 1, [["whole"], ["part", "portion", "specific region"]]),
+  pt("Replication: RNA primer is required // Transcription: RNA primer is not required", 1, [["primer"], ["not required", "no primer", "not needed"]]),
+  pt("Replication: enzyme involved is DNA polymerase // Transcription: enzyme involved is RNA polymerase", 1, [["dna polymerase"], ["rna polymerase"]]),
+];
+
+/** Features of the genetic code — Q4(a)(ii) and Q6(f). */
+const GENETIC_CODE: SchemePoint[] = [
+  pt("Consists of triplet bases // codon is non-overlapping", 1, [["triplet", "three bases", "non-overlapping", "non overlapping"]]),
+  pt("One codon for one amino acid // codon is universal", 1, [["universal", "one codon for one"]]),
+  pt("One amino acid can be coded by more than one codon // codon is degenerate", 1, [["degenerate", "more than one codon"]]),
+  pt("Codon is complementary to anticodon", 1, [["complementary to anticodon", "complementary to the anticodon", "pairs with anticodon", "pairs with the anticodon"]]),
+  pt("Consists of start codon AUG and stop codons UAA, UAG, UGA", 1, [["start codon", "stop codon", "=aug"]]),
+];
+
+export const CH6: Chapter = {
+  id: "c6",
+  number: 6,
+  en: "Expression of Biological Information",
+  bm: "Pengekspresan Maklumat Biologi",
+  mcq: [
+    {
+      id: "c6q1",
+      stem: "In an analysis of the DNA nucleotide composition to see which bases are equivalent in concentration, which of the following would be true?",
+      options: ["A. A = C", "B. A = G and C = T", "C. A + C = G + T", "D. A + T = G + C"],
+      answer: "C",
+      explain: "A pairs with T and G with C, so A = T and G = C. Adding them, A + C must equal G + T.",
+    },
+    {
+      id: "c6q2",
+      stem: "Which of the following best describes the flow of genetic information within the cell?",
+      options: ["A. RNA → DNA → protein → trait", "B. DNA → RNA → trait → protein", "C. DNA → RNA → protein → trait", "D. DNA → protein → RNA → trait"],
+      answer: "C",
+      explain: "DNA is transcribed to RNA, RNA is translated to protein, and the protein produces the trait.",
+    },
+    {
+      id: "c6q3",
+      stem: "Gene expression occurs when",
+      options: ["A. genes are transcribed", "B. mRNA is synthesized", "C. proteins are synthesized", "D. the repressor protein attaches to the operator of the operon"],
+      answer: "C",
+      explain: "A gene is expressed when its product — the protein — is made. Transcription alone is only the first step.",
+    },
+    {
+      id: "c6q4",
+      stem: "The primary function of DNA ligase is to…",
+      options: ["A. attach free nucleotides to the growing chain.", "B. remove bases that might have been inserted correctly.", "C. cut the two strands of the DNA molecule prior to replication.", "D. seal new short stretches of nucleotides into one continuous strand."],
+      answer: "D",
+      explain: "DNA ligase joins Okazaki fragments into a continuous strand by forming phosphodiester bonds.",
+    },
+    {
+      id: "c6q5",
+      stem: "The following events occur in the replication of DNA. 1 — bonds between complementary bases break; 2 — bonds between complementary bases form; 3 — DNA molecule uncoils; 4 — opposite strands separate; 5 — sugar-phosphate bonds form; 6 — free nucleotides align with complementary nucleotides on each strand. In which order do these events take place?",
+      options: ["A. 1, 3, 6, 4, 2, 5", "B. 3, 1, 4, 6, 2, 5", "C. 3, 6, 1, 4, 5, 2", "D. 4, 3, 1, 6, 5, 2"],
+      answer: "B",
+      explain: "The helix uncoils, hydrogen bonds break, strands separate, nucleotides align, base pairs bond, then the backbone forms.",
+    },
+    {
+      id: "c6q6",
+      stem: "Which diagram shows the pairing of an RNA nucleotide with a DNA nucleotide?",
+      options: ["A", "B", "C", "D"],
+      answer: "B",
+      optionsFigure: "/figures/c6-q6-options.png",
+      explain: "RNA carries uracil, which pairs with adenine on DNA. RNA never contains thymine.",
+    },
+    {
+      id: "c6q7",
+      stem: "In transcription… I. messenger RNA is produced. II. promoters are needed so that RNA polymerase can bind to DNA. III. a specific enzyme called RNA polymerase is required. IV. several mRNA molecules are made using the same DNA sequence as a template.",
+      options: ["A. I, II, III", "B. I, II and IV", "C. II, III and IV", "D. I, II, III, IV"],
+      answer: "D",
+      explain: "All four are true — one gene can be transcribed many times.",
+    },
+    {
+      id: "c6q8",
+      stem: "Listed below are the stages in protein synthesis. 1 — movement of mRNA from nucleus to cytoplasm; 2 — linking of the adjacent amino acid molecules; 3 — transcription of mRNA from a DNA template; 4 — formation of the polypeptide chain; 5 — attachment of the mRNA strand to a ribosome. In which order do these stages take place?",
+      options: ["A. 1, 3, 2, 5, 4", "B. 1, 5, 3, 4, 2", "C. 3, 1, 5, 2, 4", "D. 3, 4, 1, 2, 5"],
+      answer: "C",
+      explain: "Transcription, export to the cytoplasm, ribosome binding, peptide bonds, then the finished chain.",
+    },
+    {
+      id: "c6q9",
+      stem: "An anticodon is the sequence of the nitrogenous bases on the…",
+      options: ["A. complementary strand of DNA which codes for one amino acid.", "B. complementary strand of mRNA which codes for one amino acid.", "C. tRNA molecule at the site of amino acid attachment.", "D. tRNA molecule which complements with appropriate sequence of bases on mRNA."],
+      answer: "D",
+      explain: "The anticodon is the three-base loop of tRNA that pairs with the mRNA codon.",
+    },
+    {
+      id: "c6q10",
+      stem: "The table shows the anticodon for several tRNA which attach to a particular kind of amino acid. Part of the mRNA sequence produced following transcription of the gene for a particular polypeptide is 5'GCA GCG UAC UCC3'. What is the correct sequence of amino acids produced when this mRNA is translated?",
+      options: ["A. ala-ala-tyr-ser", "B. ala-ala-tyr-thr", "C. arg-arg-met-arg", "D. arg-arg-met-thr"],
+      answer: "A",
+      figure: "/figures/c6-q10-table.png",
+      explain: "The anticodons pairing with GCA, GCG, UAC, UCC are CGU, CGC, AUG, AGG — ala, ala, tyr, ser.",
+    },
+    {
+      id: "c6q11",
+      stem: "Insulin is a protein containing 51 amino acids. These include 17 of the 20 different amino acids commonly occurring in proteins. What is the minimum number of different kinds of tRNA molecules involved in the synthesis of insulin?",
+      options: ["A. 3", "B. 17", "C. 20", "D. 51"],
+      answer: "B",
+      explain: "At least one kind of tRNA is needed for each different amino acid used — 17.",
+    },
+    {
+      id: "c6q12",
+      stem: "Compared with single ribosomes, polyribosomes, which are complexes of ribosomes, increase the efficiency of protein synthesis. How is this achieved?",
+      options: ["A. Different protein molecules can be made simultaneously.", "B. Each copy of the mRNA molecule can be made more rapidly.", "C. More than one copy of the mRNA molecule can be read at the same time.", "D. Many copies of the same protein can be made simultaneously from one mRNA molecule."],
+      answer: "D",
+      explain: "Several ribosomes translate the same mRNA at once, producing many copies of one polypeptide.",
+    },
+    {
+      id: "c6q13",
+      stem: "In the lactose operon, both genes P and Q undergo the transcription process. Gene Q can only undergo transcription with the existence of lactose and at the same time, gene P product is released from R. Which of the following is true about the genes P, Q and R?",
+      options: ["A. P: regulatory gene, Q: structural gene, R: operator gene", "B. P: structural gene, Q: operator gene, R: regulatory gene", "C. P: operator gene, Q: structural gene, R: regulatory gene", "D. P: promoter gene, Q: regulatory gene, R: operator gene"],
+      answer: "A",
+      explain: "P makes the repressor (regulatory gene), which is released from R (the operator), letting Q (structural gene) be transcribed.",
+    },
+    {
+      id: "c6q14",
+      stem: "Which of the following statements are true about lactose operon in the presence of lactose? I. The regulator gene produces an active repressor molecule. II. Allolactose binds with the repressor molecule. III. The inactive repressor molecule binds to the promoter. IV. The RNA polymerase binds to the operator. V. Transcription of structural gene occurs.",
+      options: ["A. I, II and III", "B. I, II and V", "C. I, III and IV", "D. I, II, IV and V"],
+      answer: "B",
+      explain: "The repressor is made active, allolactose inactivates it, and the structural genes are transcribed. RNA polymerase binds the promoter, not the operator.",
+    },
+    {
+      id: "c6q15",
+      stem: "Which statement about Escherichia coli which has a regulatory gene that has undergone mutation is true?",
+      options: ["A. Only β-galactosidase is produced.", "B. Repressor produced binds with operator gene.", "C. RNA polymerase is unable to bind with promoter gene.", "D. E. coli produces β-galactosidase, permease and transacetylase continuously."],
+      answer: "D",
+      explain: "With no functional repressor, nothing blocks the operator, so all three enzymes are made all the time.",
+    },
+  ],
+  structured: [
+    {
+      id: "c6-q1-pspm1-2014",
+      session: "PSPM I 2014/2015",
+      number: "1",
+      intro: "FIGURE 1 shows a part of DNA replication.",
+      figure: "/figures/c6-figure1.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Identify strands A and B.",
+          marks: 2,
+          points: [
+            pt("Strand A: parental / template / old strand", 1, [["parental", "template", "old strand", "original"]]),
+            pt("Strand B: daughter / new strand", 1, [["daughter", "new strand", "newly synthesi"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Name the protein that maintains the DNA structure in FIGURE 1 to allow its replication.",
+          marks: 1,
+          points: [pt("Single-stranded binding protein (SSB protein)", 1, [["single strand", "single-strand", "=ssb"]])],
+        },
+        {
+          ref: "(c)",
+          prompt: "Suggest the DNA replication model shown in FIGURE 1.",
+          marks: 1,
+          points: [pt("Semiconservative model", 1, [["semiconservative", "semi-conservative", "semi conservative"]])],
+        },
+        {
+          ref: "(d)",
+          prompt: "Give TWO rules that must be obeyed for DNA replication shown in FIGURE 1.",
+          marks: 2,
+          points: [
+            pt("Complementary base-pairing rules, i.e. adenine pairs with thymine and guanine pairs with cytosine", 1, [["complementary", "adenine pairs with thymine", "a pairs with t"]]),
+            pt("Elongation occurs from 5' to 3' direction", 1, [FIVE_TO_THREE]),
+          ],
+        },
+        {
+          ref: "(e)",
+          prompt: "Name TWO enzymes involved in the formation of strand B.",
+          marks: 2,
+          anyOf: 2,
+          note: "Scheme: any 2.",
+          points: [
+            pt("Primase", 1, [["primase"]]),
+            pt("DNA polymerase III", 1, [POL3]),
+            pt("DNA polymerase I", 1, [POL1]),
+            pt("DNA ligase", 1, [["ligase"]]),
+          ],
+        },
+        {
+          ref: "(f)",
+          prompt: "State the direction for formation of leading strand and lagging strand.",
+          marks: 2,
+          points: [
+            pt("Leading strand: (5' to 3') towards the replication fork", 1, [["toward"]]),
+            pt("Lagging strand: (5' to 3') away from the replication fork", 1, [["away"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q2-ups2-2008",
+      session: "UPS II 2008/2009",
+      number: "2",
+      intro: "FIGURE 2 shows DNA replication.",
+      figure: "/figures/c6-figure2.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Name the parts labeled X and Y.",
+          marks: 2,
+          points: [
+            pt("X: Deoxyribose", 1, [["deoxyribose"]]),
+            pt("Y: Nitrogenous base", 1, [["nitrogenous base", "nitrogen base", "=base"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Name an enzyme involved in DNA replication and state its function.",
+          marks: 2,
+          anyOf: 1,
+          note: "Scheme: any one enzyme, 1 mark for the name + 1 for its function.",
+          points: [
+            pt("Helicase – unwinds / separates the DNA double helix", 2, [["helicase"], ["unwind", "separat", "untwist"]]),
+            pt("Topoisomerase – relieves strain by breaking, swivelling and rejoining DNA strands", 2, [["topoisomerase"], ["strain", "swivel", "supercoil", "tension"]]),
+            pt("Primase – catalyses the synthesis of a short RNA primer", 2, [["primase"], ["primer"]]),
+            pt("DNA polymerase III – adds DNA nucleotides to the growing 3' end of the RNA primer / growing strand", 2, [POL3, ["nucleotide", "3' end", "elongat"]]),
+            pt("DNA polymerase I – removes the RNA primer and replaces it with DNA nucleotides", 2, [POL1, ["primer", "replace"]]),
+            pt("DNA ligase – joins Okazaki fragments / forms phosphodiester bonds between Okazaki fragments", 2, [["ligase"], ["okazaki", "join", "phosphodiester", "seal"]]),
+            pt("Name of the enzyme only, function not stated (helicase / topoisomerase / primase / DNA polymerase III / DNA polymerase I / DNA ligase)", 1, [["helicase", "topoisomerase", "primase", "dna polymerase", "ligase"]]),
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "Why DNA replication is described as semiconservative?",
+          marks: 2,
+          points: [
+            pt("Each new DNA molecule consists of one original strand", 1, [["original", "parental", "=old"]]),
+            pt("and the other one is a newly synthesised strand", 1, [["new"]]),
+          ],
+        },
+        {
+          ref: "(d)",
+          prompt: "Name the stage of the cell cycle when this process occurs.",
+          marks: 1,
+          points: [pt("Interphase / S phase", 1, [["interphase", "s phase", "s-phase", "synthesis phase"]])],
+        },
+        {
+          ref: "(e)",
+          prompt: "Give THREE differences between DNA replication and transcription.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: any 3, each difference must state both sides.",
+          points: REPLICATION_VS_TRANSCRIPTION,
+        },
+      ],
+    },
+    {
+      id: "c6-q3-ups2-2006",
+      session: "UPS II 2006/2007",
+      number: "3",
+      intro: "FIGURE 3 shows two processes that occur in a eukaryotic cell.",
+      figure: "/figures/c6-figure3.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Name the processes labeled A and B as shown in FIGURE 3.",
+          marks: 2,
+          points: [
+            pt("Process A – DNA replication", 1, [["replication"]]),
+            pt("Process B – Transcription", 1, [["transcription"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "What are P, Q and Z?",
+          marks: 3,
+          points: [
+            pt("P: DNA polymerase III", 1, [POL3]),
+            pt("Q: nucleotide", 1, [["q nucleotide", "q is nucleotide", "q is a nucleotide", "rna nucleotide", "ribonucleotide"]]),
+            pt("Z: mRNA", 1, [["mrna", "messenger rna"]]),
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "If the nucleotide sequence of strand W is AGGCTTACCGTA, write the nucleotide sequence of strand Z.",
+          marks: 1,
+          points: [pt("UCC GAA UGG CAU", 1, [["ucc gaa ugg cau", "uccgaauggcau", "ucc-gaa-ugg-cau"]])],
+        },
+        {
+          ref: "(d)",
+          prompt: "What is the importance of strand Z?",
+          marks: 1,
+          points: [pt("Carries genetic information copied from DNA, which acts as a template for protein synthesis during translation", 1, [["genetic information", "genetic code", "template", "carr"], ["protein", "translation", "polypeptide"]])],
+        },
+        {
+          ref: "(e)",
+          prompt: "Which part of the cell process B occurs?",
+          marks: 1,
+          points: [pt("Nucleus", 1, [["nucleus"]])],
+        },
+        {
+          ref: "(f)",
+          prompt: "Give TWO differences of the process A and B.",
+          marks: 2,
+          anyOf: 2,
+          note: "Scheme: any 2.",
+          points: REPLICATION_VS_TRANSCRIPTION,
+        },
+      ],
+    },
+    {
+      id: "c6-q4-pspm1-2023",
+      session: "PSPM I 2023/2024",
+      number: "4",
+      intro: "(a) FIGURE 4 shows a step involved in protein synthesis.",
+      figure: "/figures/c6-figure4.png",
+      parts: [
+        {
+          ref: "(a)(i)",
+          prompt: "Name the process shown in FIGURE 4.",
+          marks: 1,
+          points: [pt("Translation", 1, [["translation"]])],
+        },
+        {
+          ref: "(a)(ii)",
+          prompt: "Describe the characteristics of M.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: any 3.",
+          points: GENETIC_CODE,
+        },
+        {
+          ref: "(a)(iii)",
+          prompt: "Name TWO components involved in the activation of L.",
+          marks: 2,
+          anyOf: 2,
+          note: "Scheme: any 2.",
+          points: [
+            pt("Aminoacyl-tRNA synthetase", 1, [["synthetase"]]),
+            pt("tRNA", 1, [["=trna", "transfer rna"]]),
+            pt("Amino acid / methionine / Met", 1, [["amino acid", "methionine", "=met"]]),
+            pt("ATP", 1, [["=atp"]]),
+          ],
+        },
+        {
+          ref: "(a)(iv)",
+          prompt: "Briefly explain the activation of L.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: max 3.",
+          points: [
+            pt("Amino acid and tRNA enter / bind to aminoacyl-tRNA synthetase", 1, [["synthetase"], ["bind", "enter", "attach"]]),
+            pt("Attachment of the amino acid to the 3' end of tRNA by a covalent bond, catalysed by aminoacyl-tRNA synthetase", 1, [["3' end", "covalent"]]),
+            pt("Using ATP", 1, [["=atp"]]),
+            pt("To form aminoacyl-tRNA", 1, [["form", "produce"], ["aminoacyl-trna", "aminoacyl trna", "charged trna"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q5-pspm1-2011",
+      session: "PSPM I 2011/2012",
+      number: "5",
+      intro: "FIGURE 5 shows the processes of protein synthesis in eukaryote.",
+      figure: "/figures/c6-figure5.png",
+      parts: [
+        {
+          ref: "(a)(i)",
+          prompt: "What is the base sequence of the Codon 1?",
+          marks: 1,
+          points: [pt("5'-AUG-3' / 3'-GUA-5'", 1, [["aug", "gua"]])],
+        },
+        {
+          ref: "(a)(ii)",
+          prompt: "What is the anticodon sequence for (a)(i)?",
+          marks: 1,
+          points: [pt("3'-UAC-5' / 5'-CAU-3'", 1, [["uac", "cau"]])],
+        },
+        {
+          ref: "(b)",
+          prompt: "Name the enzyme involved in the production of Y.",
+          marks: 1,
+          points: [pt("RNA polymerase II", 1, [["rna polymerase ii", "rna polymerase 2", "rna pol ii"]])],
+        },
+        {
+          ref: "(c)",
+          prompt: "Name X and give its function in protein synthesis.",
+          marks: 2,
+          points: [
+            pt("X: DNA", 1, [["=dna"]]),
+            pt("Function: template for RNA transcription / mRNA synthesis // carries genetic information // codes for synthesis of a specific protein", 1, [["template", "genetic information", "code for", "codes for"]]),
+          ],
+        },
+        {
+          ref: "(d)",
+          prompt: "Give THREE differences between molecules X and Y.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: any 3, each difference must state both sides.",
+          points: [
+            pt("X (DNA) has 2 polynucleotide chains // Y (RNA) has one polynucleotide chain", 1, [["2 polynucleotide", "two polynucleotide", "double strand", "double-strand"], ["one polynucleotide", "single strand", "single-strand", "one chain"]]),
+            pt("X consists of deoxyribose sugar // Y consists of ribose sugar", 1, [["deoxyribose"], ["=ribose"]]),
+            pt("X has bases guanine, cytosine, adenine, thymine // Y has guanine, cytosine, adenine, uracil", 1, [["thymine"], ["uracil"]]),
+            pt("X is a longer chain / larger molecular mass // Y is a shorter chain / smaller molecular mass", 1, [["longer", "larger"], ["shorter", "smaller"]]),
+            pt("X is a double helix // Y is linear (mRNA)", 1, [["helix"], ["linear"]]),
+            pt("X is one type only // Y has three types: mRNA, rRNA and tRNA", 1, [["one type"], ["three types", "rrna"]]),
+          ],
+        },
+        {
+          ref: "(e)",
+          prompt: "Where does molecule Y go after its synthesis?",
+          marks: 1,
+          points: [pt("It goes to the cytoplasm (to attach to a ribosome)", 1, [["cytoplasm", "ribosome"]])],
+        },
+        {
+          ref: "(f)",
+          prompt: "Name ONE enzyme involved in the production of polypeptide Z.",
+          marks: 1,
+          points: [pt("Aminoacyl-tRNA synthetase / peptidyl transferase", 1, [["synthetase", "transferase"]])],
+        },
+      ],
+    },
+    {
+      id: "c6-q6-pspm2-2007",
+      session: "PSPM II 2007/2008",
+      number: "6",
+      intro: "FIGURE 6 shows the summary of protein synthesis that occurs in an animal cell.",
+      figure: "/figures/c6-figure6.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "What are the functions of R and S in protein synthesis?",
+          marks: 2,
+          points: [
+            pt("R: carries genetic information copied from DNA which acts as a template for translation during protein synthesis", 1, [["template", "genetic information"]]),
+            pt("S: carries a specific amino acid to the ribosome during translation", 1, [["amino acid"], ["carr", "transfer", "bring"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "From FIGURE 6, identify the anticodon for glutamic acid (Glu).",
+          marks: 1,
+          points: [pt("3'CUU5' / 5'UUC3'", 1, [["cuu", "uuc"]])],
+        },
+        {
+          ref: "(c)",
+          prompt: "What is the codon for methionine (Met)?",
+          marks: 1,
+          points: [pt("5'AUG3'", 1, [["aug"]])],
+        },
+        {
+          ref: "(d)",
+          prompt: "In the translation process, several ribosomes may be attached to a single mRNA molecule forming a polyribosome. Give ONE advantage of having a polyribosome.",
+          marks: 1,
+          points: [pt("The same polypeptide can be synthesised faster", 1, [["faster", "rapid", "quick", "simultaneous", "many copies", "same time"]])],
+        },
+        {
+          ref: "(e)",
+          prompt: "Give ONE reason why DNA from nucleus is not used directly by the ribosome for the translation process.",
+          marks: 1,
+          anyOf: 1,
+          note: "Scheme: any 1.",
+          points: [
+            pt("Less chance of damage to the DNA", 1, [["damage"]]),
+            pt("Eukaryotic DNA contains introns / non-coding regions; if translated directly a non-functional protein would be produced", 1, [["intron", "non-coding", "non coding"]]),
+            pt("The rate of protein synthesis would be slower since only one copy of DNA is used as a template", 1, [["slower", "one copy"]]),
+          ],
+        },
+        {
+          ref: "(f)",
+          prompt: "State THREE features of the genetic code.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: any 3.",
+          points: GENETIC_CODE,
+        },
+        {
+          ref: "(g)",
+          prompt: "State the enzyme that catalyses the binding of amino acid to molecule S.",
+          marks: 1,
+          points: [pt("Aminoacyl-tRNA synthetase", 1, [["synthetase"]])],
+        },
+      ],
+    },
+    {
+      id: "c6-q7-ups2-2010",
+      session: "UPS II 2010/2011",
+      number: "7",
+      intro: "FIGURE 7 shows the translation process involved in expression of biological information.",
+      figure: "/figures/c6-figure7.png",
+      parts: [
+        {
+          ref: "(a)(i)",
+          prompt: "Define the translation process.",
+          marks: 2,
+          points: [
+            pt("Translating the genetic information / sequence of bases / codons in mRNA", 1, [["genetic information", "codon", "sequence of bases"]]),
+            pt("into a sequence of amino acids", 1, [["amino acid", "polypeptide"]]),
+          ],
+        },
+        {
+          ref: "(a)(ii)",
+          prompt: "Which part of the cell does this process takes place?",
+          marks: 1,
+          points: [pt("Cytoplasm", 1, [["cytoplasm"]])],
+        },
+        {
+          ref: "(b)",
+          prompt: "Name the bond D and molecule E.",
+          marks: 2,
+          points: [
+            pt("D: Peptide bond", 1, [["peptide"]]),
+            pt("E: Amino acid", 1, [["amino acid"]]),
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "What is the reading direction of ribosome on mRNA in FIGURE 7?",
+          marks: 1,
+          points: [pt("5' to 3'", 1, [FIVE_TO_THREE])],
+        },
+        {
+          ref: "(d)",
+          prompt: "State the base sequence on molecules F and G.",
+          marks: 2,
+          points: [
+            pt("Molecule F: 3'AUG5' / 5'GUA3'", 1, [["aug", "gua"]]),
+            pt("Molecule G: 3'GCU5' / 5'UCG3'", 1, [["gcu", "ucg"]]),
+          ],
+        },
+        {
+          ref: "(e)",
+          prompt: "Based on FIGURE 7, state TWO tRNA binding sites on the ribosome?",
+          marks: 2,
+          points: [
+            pt("A-site / aminoacyl site", 1, [["a site", "a-site", "aminoacyl site"]]),
+            pt("P-site / peptidyl site", 1, [["p site", "p-site", "peptidyl site"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q8-ups2-2007",
+      session: "UPS II 2007/2008",
+      number: "8",
+      intro: "FIGURE 8 shows an operon model proposed by Jacob and Monod.",
+      figure: "/figures/c6-figure8.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "State the function of P and O.",
+          marks: 2,
+          points: [
+            pt("P: binding site for RNA polymerase", 1, [["rna polymerase"]]),
+            pt("O: binding site for repressor", 1, [["repressor"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Name the type of operon involved.",
+          marks: 1,
+          points: [pt("Lactose operon / lac operon", 1, [["=lac", "lactose operon", "lac operon"]])],
+        },
+        {
+          ref: "(c)",
+          prompt: "Name the enzyme which is encoded by lacZ.",
+          marks: 1,
+          points: [pt("β-galactosidase", 1, [["galactosidase"]])],
+        },
+        {
+          ref: "(d)",
+          prompt: "Explain what happens to this operon in the absence of lactose.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: any 3.",
+          points: [
+            pt("Repressor binds to the operator", 1, [["repressor"], ["bind", "attach"], ["operator"]]),
+            pt("Prevents binding of RNA polymerase to the promoter", 1, [["rna polymerase"], ["prevent", "cannot", "unable", "block"]]),
+            pt("Transcription does not occur", 1, [["transcription"], ["not", "=no"]]),
+            pt("No enzymes produced for hydrolysis of lactose", 1, [["no enzyme", "enzymes are not", "not produced", "no galactosidase"]]),
+          ],
+        },
+        {
+          ref: "(e)",
+          prompt: "What will happen to protein I in the presence of lactose?",
+          marks: 2,
+          anyOf: 2,
+          note: "Scheme: any 2.",
+          points: [
+            pt("Lactose will be converted to allolactose / allolactose binds to protein I", 1, [["allolactose"]]),
+            pt("Changes the conformation of protein I", 1, [["conformation", "shape", "inactive"]]),
+            pt("Protein I cannot bind to the operator", 1, [["cannot bind", "unable to bind", "not bind", "detach", "released"]]),
+          ],
+        },
+        {
+          ref: "(f)",
+          prompt: "What is the advantage of having just one promoter for all structural genes?",
+          marks: 1,
+          points: [pt("All three enzymes can be synthesised simultaneously / several enzymes with only one promoter activated / only one mRNA is produced", 1, [["simultaneous", "same time", "together", "one mrna", "single mrna", "all three"]])],
+        },
+      ],
+    },
+    {
+      id: "c6-q9-pspm2-2009",
+      session: "PSPM II 2009/2010",
+      number: "9",
+      intro: "FIGURE 9 shows part of model of E. coli lac operon.",
+      figure: "/figures/c6-figure9.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Name lacI, structure K and S.",
+          marks: 3,
+          points: [
+            pt("lacI: regulatory gene", 1, [["regulat"]]),
+            pt("Structure K: operator", 1, [["operator"]]),
+            pt("Structure S: repressor protein", 1, [["repressor"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Where does the RNA polymerase bind to? Name the site.",
+          marks: 2,
+          points: [
+            pt("J", 1, [["=j"]]),
+            pt("Promoter", 1, [["promoter"]]),
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "Name the molecule T.",
+          marks: 1,
+          points: [pt("Allolactose", 1, [["allolactose"]])],
+        },
+        {
+          ref: "(d)",
+          prompt: "What will happen to S in the presence of T?",
+          marks: 2,
+          points: [
+            pt("S will change its conformation", 1, [["conformation", "shape"]]),
+            pt("Cannot bind to the operator / K // S detaches from the operator / K", 1, [["cannot bind", "unable to bind", "not bind", "detach"]]),
+          ],
+        },
+        {
+          ref: "(e)",
+          prompt: "What is the function of lacI and lacZ.",
+          marks: 2,
+          points: [
+            pt("lacI: carries the genetic code / encodes the repressor", 1, [["repressor"]]),
+            pt("lacZ: carries the genetic code / encodes β-galactosidase", 1, [["galactosidase"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q10-pspm2-2005",
+      session: "PSPM II 2005/2006",
+      number: "10",
+      intro: "FIGURE 10 shows the regulatory mechanism of lac operon of E. coli in human intestine. A and B represent some of the elements and genes involved in the regulation.",
+      figure: "/figures/c6-figure10.png",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "What is meant by an operon?",
+          marks: 2,
+          points: [
+            pt("A group / cluster of structural genes having a related function", 1, [["group", "cluster"], ["gene"]]),
+            pt("regulated as a single transcription unit", 1, [["single transcription", "one transcription", "transcription unit", "single unit"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Give the names of A and B.",
+          marks: 2,
+          points: [
+            pt("A: regulatory gene / lacI", 1, [["regulatory gene", "regulator gene", "laci", "=lac i"]]),
+            pt("B: operator gene", 1, [["operator"]]),
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "What are C and D?",
+          marks: 2,
+          points: [
+            pt("C: repressor protein", 1, [["repressor"]]),
+            pt("D: β-galactosidase", 1, [["galactosidase"]]),
+          ],
+        },
+        {
+          ref: "(d)(i)",
+          prompt: "What will happen to C when the individual drinks milk containing glucose?",
+          marks: 1,
+          points: [pt("C / repressor detaches from B / operator", 1, [["detach", "released", "dissociat", "not bind", "cannot bind"]])],
+        },
+        {
+          ref: "(d)(ii)",
+          prompt: "Give reasons for your answer in (d)(i).",
+          marks: 2,
+          anyOf: 2,
+          note: "Scheme: any 2.",
+          points: [
+            pt("Milk contains both lactose and glucose", 1, [["contains both", "contains lactose", "lactose and glucose"]]),
+            pt("Glucose is used as the main energy source", 1, [["energy"]]),
+            pt("Lactose is not metabolised", 1, [["not metaboli", "not used", "not broken"]]),
+            pt("But when glucose is absent, lactose is metabolised", 1, [["glucose absent", "absence of glucose", "glucose is absent", "no glucose"]]),
+          ],
+        },
+        {
+          ref: "(e)",
+          prompt: "State the function of the product encoded by gene y.",
+          marks: 1,
+          points: [pt("Facilitates the uptake of lactose by the bacterial cell / increases permeability of the cell membrane to lactose", 1, [["uptake", "permeab", "transport"]])],
+        },
+      ],
+    },
+    {
+      id: "c6-q11-pspm1-2024",
+      session: "PSPM I 2024/2025",
+      number: "11",
+      intro: "(a) FIGURE 11 shows a replication of DNA.",
+      figure: "/figures/c6-figure11.png",
+      extraFigures: ["/figures/c6-figure12.png"],
+      parts: [
+        {
+          ref: "(a)(i)",
+          prompt: "Name the enzyme that synthesizes P strand and state its function.",
+          marks: 2,
+          points: [
+            pt("DNA polymerase III", 1, [POL3]),
+            pt("Function: adds complementary DNA nucleotides at the 3' end of the (RNA) primer / existing / growing strand", 1, [["nucleotide"]]),
+          ],
+        },
+        {
+          ref: "(a)(ii)",
+          prompt: "How the Q strand joined into one continuous strand?",
+          marks: 2,
+          anyOf: 2,
+          note: "Scheme: max 2.",
+          points: [
+            pt("DNA polymerase I removes and replaces the (RNA) primer with DNA nucleotides", 1, [POL1, ["primer", "replace"]]),
+            pt("DNA ligase seals / joins the Okazaki fragments", 1, [["ligase"]]),
+            pt("By forming phosphodiester bonds", 1, [["phosphodiester"]]),
+          ],
+        },
+        {
+          ref: "(a)(iii)",
+          prompt: "State one (1) difference between P and Q strands.",
+          marks: 1,
+          anyOf: 1,
+          note: "Scheme: any 1, both sides stated.",
+          points: [
+            pt("P is synthesised towards the replication fork // Q is synthesised away from the replication fork", 1, [["toward"], ["away"]]),
+            pt("P is synthesised continuously // Q is synthesised discontinuously", 1, [["continu"], ["discontinu"]]),
+          ],
+        },
+        {
+          ref: "(b)(i)",
+          prompt: "FIGURE 12 shows a translation process. Identify molecule X and state its role in FIGURE 12.",
+          marks: 2,
+          points: [
+            pt("tRNA // transfer RNA // aminoacyl-tRNA", 1, [["trna", "transfer rna"]]),
+            pt("Carries and transfers a specific amino acid / lysine (from the cytoplasm) to the ribosome", 1, [["amino acid", "lysine", "=lys"]]),
+          ],
+        },
+        {
+          ref: "(b)(ii)",
+          prompt: "Describe how molecule X binds to the mRNA.",
+          marks: 2,
+          points: [
+            pt("Anticodon (on tRNA / UUU) binds to the complementary codon (on mRNA / AAA)", 1, [["anticodon"]]),
+            pt("By forming hydrogen bonds (between the complementary base pairs)", 1, [["hydrogen"]]),
+          ],
+        },
+        {
+          ref: "(b)(iii)",
+          prompt: "What will happen to the polypeptide chain when ribosome moves from one codon to the next codon?",
+          marks: 2,
+          points: [
+            pt("The polypeptide chain attached to tRNA on the A site translocates / shifts to the P site // the chain on the tRNA in the P site detaches", 1, [["translocat", "shift", "detach"]]),
+            pt("The chain on the P-site tRNA becomes attached to the amino acid on the A-site tRNA // the polypeptide becomes longer / elongates by one amino acid", 1, [["longer", "elongat", "grow", "one amino acid"]]),
+          ],
+        },
+        {
+          ref: "(c)",
+          prompt: "Lactose induces the synthesis of enzyme, β-galactosidase. Briefly explain what happens when an E.coli cell runs out of lactose.",
+          marks: 3,
+          anyOf: 3,
+          note: "Scheme: max 3.",
+          points: [
+            pt("(When lactose is absent) the lac repressor binds to the operator", 1, [["repressor"], ["operator"]]),
+            pt("RNA polymerase cannot bind to the promoter", 1, [["rna polymerase"], ["cannot", "unable", "not"]]),
+            pt("Transcription (of lacZ, lacY and lacA) cannot occur // mRNA is not produced", 1, [["transcription", "mrna"], ["cannot", "not", "=no"]]),
+            pt("β-galactosidase (permease, transacetylase) is not produced", 1, [["not produced", "no galactosidase", "no enzyme", "not synthesi", "not be produced", "not formed"]]),
+          ],
+        },
+      ],
+    },
+
+    /* ── Essays ────────────────────────────────────────────────────────── */
+    {
+      id: "c6-q12-essay-pspm2-2008",
+      session: "PSPM II 2008/2009 (Essay)",
+      number: "12",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe the process of DNA replication according to the semi-conservative theory.",
+          marks: 10,
+          anyOf: 10,
+          note: "Scheme: 15 points listed, maximum 10.",
+          points: [
+            pt("Helicase unwinds the double helix at the replication fork by breaking hydrogen bonds", 1, [["helicase"], ["unwind", "hydrogen"]]),
+            pt("The double-stranded DNA is separated", 1, [["separat"]]),
+            pt("Each strand acts as a template", 1, [["template"]]),
+            pt("Single-strand binding proteins bind to the unpaired strands, preventing them from re-pairing", 1, [["single-strand", "single strand", "=ssb"]]),
+            pt("As DNA unwinds it becomes more twisted / supercoiled", 1, [["twist", "supercoil"]]),
+            pt("Topoisomerase relieves the strain of overwinding ahead of the fork", 1, [["topoisomerase"]]),
+            pt("Primase synthesises an RNA primer of complementary RNA nucleotides", 1, [["primase"]]),
+            pt("DNA polymerase III adds complementary DNA nucleotides to the 3' end of the RNA primer", 1, [POL3]),
+            pt("Replication / elongation occurs in the 5' to 3' direction", 1, [FIVE_TO_THREE]),
+            pt("The leading strand is synthesised continuously towards the replication fork", 1, [["leading"], ["continuous", "toward"]]),
+            pt("The lagging strand is synthesised away from the replication fork", 1, [["lagging"], ["away", "discontinu"]]),
+            pt("Forming Okazaki fragments", 1, [["okazaki"]]),
+            pt("DNA polymerase I removes the RNA primer and replaces it with DNA nucleotides", 1, [POL1]),
+            pt("DNA ligase joins the Okazaki fragments into a continuous strand by forming phosphodiester bonds", 1, [["ligase"]]),
+            pt("Two identical copies of the original / parental DNA are produced", 1, [["identical", "two copies"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q13-essay-pspm1-2013",
+      session: "PSPM I 2013/2014 (Essay)",
+      number: "13",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe transcription process.",
+          marks: 12,
+          anyOf: 12,
+          note: "Scheme (eukaryotic cell): 14 points listed, maximum 12.",
+          points: [
+            pt("During initiation, RNA polymerase II binds to the promoter on DNA", 1, [["promoter"]]),
+            pt("RNA polymerase II unwinds the double helix by breaking hydrogen bonds", 1, [["unwind", "hydrogen bond"]]),
+            pt("To separate the two DNA strands", 1, [["separat"]]),
+            pt("Only one DNA strand acts as a template", 1, [["one dna strand", "one strand", "template strand"]]),
+            pt("RNA synthesis begins at the start point on the template strand", 1, [["start point", "start site", "initiation site"]]),
+            pt("During elongation RNA polymerase II moves along the DNA, adding free RNA nucleotides complementary to the template", 1, [["nucleotide"], ["complementary", "add"]]),
+            pt("RNA nucleotides are added at the 3' end of the growing pre-mRNA", 1, [["3' end"]]),
+            pt("The pre-mRNA is synthesised in the 5' to 3' direction", 1, [FIVE_TO_THREE]),
+            pt("The newly made pre-mRNA behind RNA polymerase II detaches / peels away from the template", 1, [["detach", "peel"]]),
+            pt("The DNA double helix re-forms", 1, [["re-form", "reform", "rewind", "rejoin"]]),
+            pt("During termination RNA polymerase II transcribes the polyadenylation signal sequence", 1, [["polyadenylation"]]),
+            pt("The transcribed pre-mRNA contains the polyadenylation signal (AAUAAA)", 1, [["aauaaa"]]),
+            pt("RNA polymerase II stops adding RNA nucleotides", 1, [["stop"]]),
+            pt("The pre-mRNA is released from the template and RNA polymerase II detaches", 1, [["release"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q14-essay-pspm1-2012",
+      session: "PSPM I 2012/2013 (Essay)",
+      number: "14",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe the differences between replication and transcription.",
+          marks: 10,
+          anyOf: 5,
+          note: "Scheme: any 5 differences, 2 marks each (2/0).",
+          points: [
+            pt("Replication: both strands act as template // Transcription: only one strand acts as template", 2, [["both strand", "two strand"], ["one strand", "only one"]]),
+            pt("Replication: produces two molecules of (double-stranded) DNA // Transcription: produces a (single-stranded) mRNA strand", 2, [["two molecules", "double strand", "double-strand"], ["mrna"]]),
+            pt("Replication: the whole DNA genome is copied // Transcription: only a part / specific region is copied", 2, [["whole"], ["part", "specific region"]]),
+            pt("Replication: RNA primer is required // Transcription: RNA primer is not required", 2, [["primer"], ["not required", "no primer", "not needed"]]),
+            pt("Replication: enzyme is DNA polymerase // Transcription: enzyme is RNA polymerase", 2, [["dna polymerase"], ["rna polymerase"]]),
+            pt("Replication uses guanine, adenine, thymine and cytosine // Transcription uses guanine, adenine, uracil and cytosine", 2, [["thymine"], ["uracil"]]),
+            pt("Replication only occurs during S phase of interphase // Transcription occurs throughout the life of a cell", 2, [["s phase", "interphase"], ["throughout"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q15-essay-pspm2-2010",
+      session: "PSPM II 2010/2011 (Essay)",
+      number: "15",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe the elongation process in protein translation.",
+          marks: 8,
+          anyOf: 8,
+          note: "Scheme: 10 points listed, maximum 8.",
+          points: [
+            pt("During codon recognition, an aminoacyl-tRNA with an anticodon complementary to the mRNA codon enters the empty A site", 1, [["anticodon"], ["a site", "a-site"]]),
+            pt("A peptide bond is formed between the amino acid in the P site and the new amino acid in the A site", 1, [["peptide bond"]]),
+            pt("Catalysed by a ribozyme — peptidyl transferase / rRNA of the large ribosomal subunit", 1, [["peptidyl transferase", "ribozyme", "rrna"]]),
+            pt("This removes the growing polypeptide from the tRNA in the P site and binds it to the new amino acid in the A site", 1, [["growing polypeptide"]]),
+            pt("Translocation occurs / the ribosome moves one codon ahead", 1, [["translocation occurs", "ribosome moves", "one codon", "codon ahead"]]),
+            pt("Translation proceeds in the 5' to 3' direction", 1, [FIVE_TO_THREE]),
+            pt("The tRNA in the P site moves to the E site and then leaves the ribosome", 1, [["e site", "e-site"]]),
+            pt("The tRNA in the A site is translocated / shifted to the P site", 1, [["a site", "a-site"], ["p site", "p-site"]]),
+            pt("A new aminoacyl-tRNA enters the empty A site to translate the next codon", 1, [["next codon", "new aminoacyl", "empty a site"]]),
+            pt("The process is repeated until the complete polypeptide chain is formed", 1, [["repeat"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q16-essay-pspm1-2016",
+      session: "PSPM I 2016/2017 (Essay)",
+      number: "16",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Explain the differences between transcription and translation.",
+          marks: 10,
+          anyOf: 5,
+          note: "Scheme: max 5 differences, 2 marks each (2/0).",
+          points: [
+            pt("Transcription occurs in the nucleus // Translation occurs in the cytoplasm", 2, [["nucleus"], ["cytoplasm"]]),
+            pt("Transcription: template is a portion of one DNA strand // Translation: template is the mRNA strand", 2, [["portion", "dna strand", "dna template"], ["mrna strand", "mrna template", "template is mrna", "template is the mrna"]]),
+            pt("Transcription produces single-stranded mRNA // Translation produces a polypeptide chain / protein", 2, [["produces mrna", "produces single-stranded mrna", "produce mrna"], ["polypeptide", "protein"]]),
+            pt("RNA polymerase moves along the DNA template from 3' to 5' // the ribosome moves along the mRNA from 5' to 3'", 2, [["3' to 5'", "3'-5'"], FIVE_TO_THREE]),
+            pt("Transcription requires RNA polymerase // Translation requires aminoacyl-tRNA synthetase", 2, [["rna polymerase"], ["synthetase"]]),
+            pt("Transcription uses RNA nucleotides as monomers // Translation uses amino acids as monomers", 2, [["rna nucleotide"], ["amino acid"]]),
+            pt("Transcription begins at the promoter and stops at the terminator // Translation begins at the start codon and stops at the stop codon", 2, [["promoter", "terminator"], ["start codon", "stop codon"]]),
+            pt("Transcription pairs RNA nucleotides with complementary DNA bases // Translation pairs the tRNA anticodon with the complementary mRNA codon", 2, [["rna nucleotides and complementary", "pairing of rna nucleotide", "pairs rna nucleotides"], ["anticodon"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q17-essay-pspm1-2015",
+      session: "PSPM I 2015/2016 (Essay)",
+      number: "17",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "State ALL components of the lac operon in E. coli and briefly describe the function of each component.",
+          marks: 10,
+          note: "Scheme: 1 mark per component + 1 for its function.",
+          points: [
+            pt("Promoter", 1, [["promoter"]]),
+            pt("Promoter: binding site of RNA polymerase to start transcription of the structural genes", 1, [["rna polymerase"]]),
+            pt("Operator", 1, [["operator"]]),
+            pt("Operator: binding site for the repressor protein", 1, [["repressor"]]),
+            pt("lacZ", 1, [["lacz", "=lac z"]]),
+            pt("lacZ: encodes β-galactosidase", 1, [["galactosidase"]]),
+            pt("lacY", 1, [["lacy", "=lac y"]]),
+            pt("lacY: encodes permease", 1, [["permease"]]),
+            pt("lacA", 1, [["laca", "=lac a"]]),
+            pt("lacA: encodes transacetylase", 1, [["transacetylase", "acetyltransferase"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q18-essay-pspm2-2008",
+      session: "PSPM II 2008/2009 (Essay)",
+      number: "18",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Describe the mechanism of operon control in E. coli when lactose is present.",
+          marks: 10,
+          anyOf: 10,
+          note: "Scheme: 11 points listed, maximum 10.",
+          points: [
+            pt("When lactose is present, some lactose molecules enter E. coli", 1, [["enter"]]),
+            pt("Some lactose is converted to allolactose", 1, [["convert"], ["allolactose"]]),
+            pt("Allolactose binds to the repressor protein", 1, [["allolactose"], ["bind"], ["repressor"]]),
+            pt("The repressor changes its conformation to an inactive form", 1, [["conformation", "inactive"]]),
+            pt("The repressor cannot bind to the operator", 1, [["cannot bind", "unable to bind", "not bind"], ["operator"]]),
+            pt("RNA polymerase binds to the promoter", 1, [["rna polymerase"], ["promoter"]]),
+            pt("The structural genes are transcribed to form a single mRNA", 1, [["transcribed", "transcription"], ["mrna"]]),
+            pt("The mRNA is translated to synthesise 3 proteins / enzymes", 1, [["translat"]]),
+            pt("β-galactosidase hydrolyses lactose to glucose and galactose", 1, [["galactosidase"]]),
+            pt("Permease facilitates the uptake of lactose / increases membrane permeability to lactose", 1, [["permease"]]),
+            pt("Transacetylase detoxifies other molecules entering the cell via permease", 1, [["transacetylase"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q19-essay-pspm1-2022",
+      session: "PSPM I 2022/2023 (Essay)",
+      number: "19",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Explain the enzymes involved in DNA replication.",
+          marks: 10,
+          anyOf: 10,
+          note: "Scheme: 1 mark per enzyme + 1 for its function, maximum 10.",
+          points: [
+            pt("Helicase", 1, [["helicase"]]),
+            pt("Unwinds / untwists the DNA double helix by breaking hydrogen bonds between both strands", 1, [["unwind", "untwist"]]),
+            pt("Topoisomerase", 1, [["topoisomerase"]]),
+            pt("Relieves strain by breaking, swivelling and rejoining DNA strands", 1, [["strain", "swivel"]]),
+            pt("Primase", 1, [["primase"]]),
+            pt("Catalyses the synthesis of a short RNA primer", 1, [["short rna primer", "synthesis of a short", "synthesise a primer", "synthesizes rna primer", "synthesises rna primer"]]),
+            pt("DNA polymerase III", 1, [POL3]),
+            pt("Adds DNA nucleotides to the growing 3' end of the RNA primer / existing strand", 1, [["3' end"]]),
+            pt("DNA polymerase I", 1, [POL1]),
+            pt("Removes the RNA primer and replaces it with DNA nucleotides", 1, [["remove", "replace"]]),
+            pt("DNA ligase", 1, [["ligase"]]),
+            pt("Catalyses the joining of Okazaki fragments / formation of phosphodiester bonds between them", 1, [["okazaki", "phosphodiester"]]),
+          ],
+        },
+        {
+          ref: "(b)",
+          prompt: "Differentiate between the synthesis of leading and lagging strands.",
+          marks: 4,
+          note: "Scheme: 1 mark per difference (1/0).",
+          points: [
+            pt("Leading: synthesised continuously // Lagging: synthesised discontinuously", 1, [["continu"], ["discontinu"]]),
+            pt("Leading: synthesised towards the replication fork // Lagging: synthesised away from the fork", 1, [["toward"], ["away"]]),
+            pt("Leading: no Okazaki fragments // Lagging: Okazaki fragments are formed", 1, [["okazaki"]]),
+            pt("Leading: involves one RNA primer // Lagging: involves several RNA primers", 1, [["one rna primer", "one primer", "single primer"], ["several", "many", "multiple"]]),
+          ],
+        },
+      ],
+    },
+    {
+      id: "c6-q20-essay-pspm1-2023",
+      session: "PSPM I 2023/2024 (Essay)",
+      number: "20",
+      parts: [
+        {
+          ref: "(a)",
+          prompt: "Explain what happen to lac operon of the E. coli in the digestive tract of a person who never takes dairy products.",
+          marks: 5,
+          anyOf: 5,
+          note: "Scheme: 6 points listed, maximum 5.",
+          points: [
+            pt("When lactose / allolactose is absent the repressor protein is active", 1, [["repressor"], ["active"]]),
+            pt("The repressor binds to the operator", 1, [["bind"], ["operator"]]),
+            pt("This prevents RNA polymerase from binding to the promoter", 1, [["rna polymerase"], ["promoter"]]),
+            pt("The lac operon is inactivated", 1, [["inactivat", "switched off", "turned off"]]),
+            pt("Transcription will not occur // lacZ, lacY and lacA are not transcribed", 1, [["transcription", "transcribed"], ["not", "=no"]]),
+            pt("Translation will not occur // β-galactosidase, permease and transacetylase are not produced", 1, [["translation", "galactosidase", "permease"], ["not", "=no"]]),
+          ],
+        },
+      ],
+    },
+  ],
+};

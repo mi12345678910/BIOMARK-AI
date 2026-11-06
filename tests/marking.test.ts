@@ -96,9 +96,9 @@ for (const ch of CHAPTERS) {
 }
 check("every MCQ answer maps to a real option", bad, 0);
 check(
-  "MCQ counts (Ch3/Ch4/Ch5)",
+  "MCQ counts (Ch3–Ch8)",
   CHAPTERS.map((c) => c.mcq.length),
-  [10, 14, 7],
+  [10, 14, 7, 15, 12, 16],
 );
 
 // ── Bank integrity: a perfect answer must score full marks ────────────────
@@ -130,9 +130,9 @@ check("every part reaches full marks on a perfect answer", brokenParts.length, 0
 
 // ── Bank size, so accidental deletions are noticed ────────────────────────
 check(
-  "structured question counts (Ch3/Ch4/Ch5)",
+  "structured question counts (Ch3–Ch8)",
   CHAPTERS.map((c) => c.structured.length),
-  [6, 0, 15],
+  [6, 0, 15, 20, 22, 20],
 );
 
 // ── Case 1 / Case 2 routing ───────────────────────────────────────────────
@@ -341,7 +341,7 @@ check("every MCQ has readable options or an options figure", unreadable.length, 
 
 // The figure-based ones must actually point at bundled files.
 const figureQs = CHAPTERS.flatMap((c) => c.mcq).filter((q) => q.optionsFigure);
-check("figure-option questions found", figureQs.length, 3);
+check("figure-option questions found", figureQs.length, 4);
 check(
   "all figure paths are under /figures",
   figureQs.every(
@@ -358,18 +358,27 @@ check(
 // cannot be answered without the artwork. This catches the case where a
 // question is transcribed but its figure is forgotten.
 const VISUAL =
-  /figure|diagram|pedigree|graph|punnett|shown below|below shows|the figure/i;
+  // "TABLE 1 shows" needs its artwork just as much as a figure does.
+  /figure|\btable\s*\d|diagram|pedigree|graph|punnett|shown below|below shows|the figure/i;
 
 const missingVisual: string[] = [];
 
 for (const ch of CHAPTERS) {
   for (const q of ch.mcq) {
-    if (VISUAL.test(q.stem) && !q.figure) missingVisual.push(`mcq ${q.id}`);
+    // "Which diagram shows…" can have its diagrams as the options instead.
+    if (VISUAL.test(q.stem) && !q.figure && !q.optionsFigure) missingVisual.push(`mcq ${q.id}`);
   }
   for (const s of ch.structured) {
     const refersToVisual =
       VISUAL.test(s.intro ?? "") || s.parts.some((p) => VISUAL.test(p.prompt));
-    if (refersToVisual && !s.figure) missingVisual.push(`structured ${s.id}`);
+    // A table whose values are transcribed into the intro is supplied — the
+    // student can answer from the text ("Normal wing: 400. Vestigial wing: 64.").
+    const tableOnly =
+      !/figure|diagram|pedigree|graph|punnett/i.test(
+        [s.intro ?? "", ...s.parts.map((p) => p.prompt)].join(" "),
+      );
+    const tableTranscribed = tableOnly && /\d+\D+\d+/.test((s.intro ?? "").replace(/table\s*\d/i, ""));
+    if (refersToVisual && !s.figure && !tableTranscribed) missingVisual.push(`structured ${s.id}`);
   }
 }
 if (missingVisual.length)
@@ -382,12 +391,12 @@ const allPaths = [
   ...CHAPTERS.flatMap((c) => c.mcq).flatMap((q) =>
     [q.figure, q.optionsFigure].filter(Boolean),
   ),
-  ...CHAPTERS.flatMap((c) => c.structured).map((s) => s.figure).filter(Boolean),
+  ...CHAPTERS.flatMap((c) => c.structured).flatMap((s) => [s.figure, ...(s.extraFigures ?? [])]).filter(Boolean),
 ] as string[];
 const absent = allPaths.filter((p) => !fs.existsSync(`public${p}`));
 if (absent.length) console.log(`  ! missing files: ${absent.join(", ")}`);
 check("every referenced figure file exists on disk", absent.length, 0);
-check("figures wired up", allPaths.length, 10);
+check("figures wired up", allPaths.length, 63);
 
 // No orphans: every bundled file must be referenced by a question.
 const onDisk = fs.readdirSync("public/figures").map((f) => `/figures/${f}`);
@@ -990,7 +999,17 @@ const selfFail: string[] = [];
 for (const chapter of CHAPTERS) {
   for (const q of chapter.structured) {
     for (const part of q.parts) {
-      const asked = `${q.intro ?? ""} ${part.prompt}`.trim();
+      // What a student actually pastes: the intro, plus the sub-question block
+      // the part sits in. "(b)(ii) Name molecule Q." alone identifies nothing;
+      // it is pasted under "(b)(i) FIGURE 11 shows the production of human
+      // insulin…", so earlier prompts sharing the part's letter come too.
+      const letter = part.ref.match(/^\(([a-z])\)/)?.[1];
+      const upTo = q.parts.indexOf(part);
+      const block = q.parts
+        .slice(0, upTo + 1)
+        .filter((p, i) => i === upTo || (letter && p.ref.startsWith(`(${letter})`)))
+        .map((p) => p.prompt);
+      const asked = [q.intro ?? "", ...block].join(" ").trim();
       const m = findQuestionMatch(asked);
 
       if (m?.question.id === q.id) {
@@ -1025,7 +1044,11 @@ for (const chapter of CHAPTERS) {
 }
 if (selfFail.length) selfFail.forEach((f) => console.log(`  ! ${f}`));
 check("every stored part identifies itself (or an identical one)", selfFail.length, 0);
-check("self-identification covers the whole bank", selfOk, 60);
+check(
+  "self-identification covers the whole bank",
+  selfOk,
+  CHAPTERS.flatMap((c) => c.structured).reduce((n, q) => n + q.parts.length, 0),
+);
 
 // Character-bigram similarity is what survives OCR damage.
 check(
@@ -1142,6 +1165,125 @@ check(
   isDrawingQuestion("Draw and label the stages of meiosis I"),
   true,
 );
+
+// ── Every question is identifiable ────────────────────────────────────────
+//
+// A student must be able to tell which paper a result came from: unique ids,
+// a session and question number on every structured question, and no part
+// label used twice within one question.
+{
+  const ids = CHAPTERS.flatMap((c) => [...c.mcq.map((q) => q.id), ...c.structured.map((q) => q.id)]);
+  const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+  if (dupes.length) console.log(`  ! duplicate ids: ${dupes.join(", ")}`);
+  check("every question id is unique", dupes.length, 0);
+
+  const unlabelled = CHAPTERS.flatMap((c) => c.structured).filter(
+    (q) => !/^(PSPM|UPS|KMJ)/.test(q.session) || !/^\d+$/.test(q.number),
+  );
+  if (unlabelled.length) console.log(`  ! missing session/number: ${unlabelled.map((q) => q.id).join(", ")}`);
+  check("every structured question names its session and number", unlabelled.length, 0);
+
+  const repeatedRefs = CHAPTERS.flatMap((c) => c.structured).filter((q) => {
+    const refs = q.parts.map((p) => p.ref);
+    return new Set(refs).size !== refs.length;
+  });
+  check("no part label repeats within a question", repeatedRefs.map((q) => q.id), []);
+
+  // Group caps must reference groups that exist, and allow the full total.
+  const badGroups = CHAPTERS.flatMap((c) => c.structured).flatMap((q) =>
+    q.parts.filter((p) => {
+      if (!p.groupAnyOf) return false;
+      const used = new Set(p.points.map((pt) => pt.group));
+      return Object.keys(p.groupAnyOf).some((g) => !used.has(g));
+    }).map((p) => `${q.id} ${p.ref}`),
+  );
+  check("every group cap refers to a real group", badGroups, []);
+}
+
+// ── The question's own wording must never earn marks ──────────────────────
+//
+// Students paste the question together with their answer, and the whole paste
+// is marked. Any keyword that also appears in the question text is therefore
+// a free mark for anyone who copies the question — "sickle" in "explain how
+// point mutation can cause sickle cell anemia", "recombinant" in "…using
+// recombinant DNA technology". Mark the bare question text against every part
+// and it must score zero.
+{
+  const leaks: string[] = [];
+  for (const ch of CHAPTERS) {
+    for (const q of ch.structured) {
+      const questionText = [q.intro ?? "", ...q.parts.map((p) => p.prompt)].join("\n");
+      for (const part of q.parts) {
+        const r = markPart(part, questionText);
+        if (r.awarded > 0) {
+          const free = r.results.filter((x) => x.earned).map((x) => x.matched.join("+"));
+          leaks.push(`${q.id} ${part.ref} gets ${r.awarded} free from: ${free.join(" | ")}`);
+        }
+      }
+    }
+  }
+  if (leaks.length) leaks.forEach((l) => console.log(`  ! ${l}`));
+  check("the question's own wording earns no marks", leaks.length, 0);
+}
+
+// ── Papers print the session header on its own line above the question ────
+{
+  const page =
+    "PSPM I 2017/2018\n10. FIGURE 13 shows the sequence of Polymerase Chain Reaction (PCR) process.\n(a) Identify stage S, T and U. S denaturation, T annealing, U extension";
+  const items = routeSubmission([{ label: "p.jpg", text: page }]);
+  check("a session header is not split off as its own result", items.length, 1);
+
+  const questionOnly =
+    "PSPM II 2008/2009\n5. FIGURE 8 below shows part of the process involved in DNA cloning.\n(a) State the characteristics that a plasmid must possess.\n(b) Why the restriction enzyme EcoRI is used to cut both the plasmid and foreign DNA?";
+  check(
+    "session years are not mistaken for the student's working",
+    routeSubmission([{ label: "p.jpg", text: questionOnly }]).map((i) => i.routed.mode),
+    ["modelAnswer"],
+  );
+}
+
+// ── A paper with a drawing sub-part is still marked ───────────────────────
+// Q14(a)(ii) says "Draw the segment…". Checking for drawings before matching
+// sent the whole paste to a diagram and left the written parts unmarked.
+check(
+  "a drawing sub-part does not divert the whole question",
+  routeSubmission([
+    {
+      label: "p.jpg",
+      text: "PSPM I 2023/2024\n14. (a) FIGURE 16 shows segment of a plasmid isolated from host cell, E. coli.\n(i) Identify the restriction enzyme that is used to cut the plasmid shown in FIGURE 16. Answer: EcoRI\n(ii) Draw the segment of plasmid after it is cut with the restriction enzyme mentioned in (a) (i).",
+    },
+  ]).map((i) => (i.routed.mode === "graded" ? i.routed.match.question.id : i.routed.mode)),
+  ["c8-q14-pspm1-2023"],
+);
+
+// ── Marker features used by the new chapters ──────────────────────────────
+{
+  const pol = {
+    ref: "x", prompt: "", marks: 2,
+    points: [
+      { text: "DNA polymerase III", marks: 1, require: [["polymerase iii"]] },
+      { text: "DNA polymerase I", marks: 1, require: [["polymerase i"]] },
+    ],
+  };
+  check("naming pol III does not also earn the pol I mark", markPart(pol, "DNA polymerase III").awarded, 1);
+  check("naming both earns both", markPart(pol, "DNA polymerase III and DNA polymerase I").awarded, 2);
+
+  const word = { ref: "x", prompt: "", marks: 1, points: [{ text: "ribose", marks: 1, require: [["=ribose"]] }] };
+  check("'=ribose' is not found inside 'deoxyribose'", markPart(word, "deoxyribose sugar").awarded, 0);
+  check("but is found on its own", markPart(word, "ribose sugar").awarded, 1);
+
+  const grouped = {
+    ref: "x", prompt: "", marks: 4, groupAnyOf: { a: 2, b: 2 },
+    points: [
+      { text: "a1", marks: 1, require: [["alpha"]], group: "a" },
+      { text: "a2", marks: 1, require: [["beta"]], group: "a" },
+      { text: "a3", marks: 1, require: [["gamma"]], group: "a" },
+      { text: "b1", marks: 1, require: [["delta"]], group: "b" },
+    ],
+  };
+  check("a section cap holds even when the total has room", markPart(grouped, "alpha beta gamma").awarded, 2);
+  check("other sections still count", markPart(grouped, "alpha beta gamma delta").awarded, 3);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

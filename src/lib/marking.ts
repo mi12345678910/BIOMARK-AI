@@ -20,8 +20,19 @@ export interface SchemePoint {
   /** The scheme line itself — shown to the student as the model answer. */
   text: string;
   marks: number;
-  /** Every group must match. Within a group, any one alternative suffices. */
+  /**
+   * Every group must match. Within a group, any one alternative suffices.
+   *
+   * Prefix an alternative with "=" to match it as a whole word only:
+   * "=ribose" must not be found inside "deoxyribose", "=male" inside
+   * "female", "=sexual" inside "asexual".
+   */
   require: string[][];
+  /**
+   * Which sub-section of the scheme this point belongs to, for schemes that
+   * cap sections separately — "spontaneous: any 4, induced: any 4".
+   */
+  group?: string;
 }
 
 export interface QuestionPart {
@@ -31,6 +42,12 @@ export interface QuestionPart {
   points: SchemePoint[];
   /** Scheme "Any 2" / "Any 3" — the most points that can be credited. */
   anyOf?: number;
+  /**
+   * Per-section caps, keyed by `SchemePoint.group`. Without these an essay
+   * marked "inversion max 5 + translocation max 5" let a student earn all 10
+   * from a thorough paragraph on inversion alone.
+   */
+  groupAnyOf?: Record<string, number>;
   note?: string;
 }
 
@@ -69,13 +86,28 @@ export function normalise(input: string): string {
  * only works without a trailing boundary.
  */
 function containsAlternative(haystack: string, alternative: string): boolean {
+  // Opt-in whole word: no letter, digit, hyphen or plus on either side, so
+  // "=ribose" skips "deoxyribose", "=trna" skips "aminoacyl-trna", and "=n"
+  // skips "n+1".
+  if (alternative.startsWith("=")) {
+    const needle = normalise(alternative.slice(1));
+    if (!needle) return false;
+    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?<![a-z0-9\\-+])${escaped}(?![a-z0-9\\-+])`).test(haystack);
+  }
+
   const needle = normalise(alternative);
   if (!needle) return false;
 
   const hasDigit = /\d/.test(needle);
   const isTinyWord = needle.length <= 2;
+  // A trailing roman numeral is the whole distinction between "DNA polymerase
+  // I" and "DNA polymerase III", or "anaphase I" and "anaphase II". As a plain
+  // substring the shorter one matched inside the longer, so naming pol III
+  // also earned the pol I mark.
+  const endsInRoman = /(^|\s)(i{1,3}|iv|vi{0,3})$/.test(needle);
 
-  if (hasDigit || isTinyWord) {
+  if (hasDigit || isTinyWord || endsInRoman) {
     const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Not preceded by a letter/digit/dot (blocks "10.4" matching "0.4"),
     // not followed by a letter/digit (blocks "0.45" matching "0.4").
@@ -129,6 +161,7 @@ export function markPart(part: QuestionPart, answer: string): PartResult {
   let creditedPoints = 0;
   let cappedByAnyOf = false;
   const cap = part.anyOf ?? Infinity;
+  const perGroup = new Map<string, number>();
 
   const earned = results
     .filter((r) => r.earned)
@@ -138,6 +171,18 @@ export function markPart(part: QuestionPart, answer: string): PartResult {
     if (creditedPoints >= cap) {
       cappedByAnyOf = true;
       break;
+    }
+    // Section cap ("induced mutation: any 4") — skip, don't stop: the next
+    // earned point may belong to a section that still has room.
+    const group = r.point.group;
+    const groupCap = group ? part.groupAnyOf?.[group] : undefined;
+    if (group && groupCap !== undefined) {
+      const used = perGroup.get(group) ?? 0;
+      if (used >= groupCap) {
+        cappedByAnyOf = true;
+        continue;
+      }
+      perGroup.set(group, used + 1);
     }
     awarded += r.point.marks;
     creditedPoints += 1;

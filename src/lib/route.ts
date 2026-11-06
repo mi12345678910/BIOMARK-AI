@@ -40,15 +40,23 @@ export interface RoutedSegment {
 
 /** Decide the outcome for a single self-contained piece of text. */
 export function routeOne(text: string): Routed {
-  // Drawing questions first: nothing here can read a hand-drawn diagram, so
-  // scoring one would be guesswork.
-  if (isDrawingQuestion(text)) {
+  const match = findQuestionMatch(text);
+
+  // Drawing requests get the diagram: nothing here can read a hand-drawn
+  // diagram, so scoring one would be guesswork.
+  //
+  // Unless the text is a past-year question we hold a scheme for. Several
+  // papers put one drawing sub-part among written ones — "(a)(ii) Draw the
+  // segment of plasmid after it is cut" — and checking for a drawing first
+  // sent the student's whole paste to a diagram, leaving every written part
+  // unmarked. Drawing sub-parts are simply not in the bank, so marking the
+  // rest is exactly right.
+  if (!match && isDrawingQuestion(text)) {
     const diagram = findDiagram(text);
     if (diagram) return { mode: "diagram", diagram };
     return { mode: "explained", notes: searchNotes(text, 3) };
   }
 
-  const match = findQuestionMatch(text);
   if (!match) return { mode: "explained", notes: searchNotes(text, 3) };
 
   const parts = selectRelevantParts(match.question, text);
@@ -94,18 +102,26 @@ export function routeOne(text: string): Routed {
 export function splitIntoQuestions(text: string): string[] {
   const lines = text.split(/\r?\n/);
 
+  const isSessionHeader = (line: string) =>
+    /^\s*(?:PSPM|UPS)\s+(?:I{1,3}|1|2)\s*\d{4}\s*\/\s*\d{4}/i.test(line);
+
   const startsQuestion = (line: string) =>
     // "1. In a population…" / "2) In a population…" — a one or two digit
     // number, then a separator, then a space and a letter or bracket. The
     // trailing space matters: it keeps "0.6" and "1.5" out.
     /^\s*(?:q(?:uestion)?\s*)?\d{1,2}\s*[.)]\s+[A-Za-z(]/i.test(line) ||
-    /^\s*(?:PSPM|UPS)\s+I{1,3}\s*\d{4}\s*\/\s*\d{4}/i.test(line);
+    isSessionHeader(line);
 
   const blocks: string[][] = [];
   let current: string[] = [];
 
   for (const line of lines) {
-    if (startsQuestion(line) && current.some((l) => l.trim())) {
+    // A block holding nothing but a session header belongs to the question
+    // printed under it. Papers set "PSPM I 2023/2024" on its own line above
+    // "4. (a) FIGURE 4 shows…", and splitting there produced an orphan header
+    // that was routed on its own and showed up as an empty extra result.
+    const onlyHeader = current.every((l) => !l.trim() || isSessionHeader(l));
+    if (startsQuestion(line) && current.some((l) => l.trim()) && !onlyHeader) {
       blocks.push(current);
       current = [];
     }

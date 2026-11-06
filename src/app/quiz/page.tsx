@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DnaHelix } from "@/components/BioArt";
 import { useI18n } from "@/lib/i18n";
 import { CHAPTERS, findChapter, type Mcq } from "@/data/bank";
@@ -21,7 +21,14 @@ export default function QuizPage() {
   const [chapterId, setChapterId] = useState(CHAPTERS[0].id);
   const chapter = findChapter(chapterId)!;
 
-  const [deck, setDeck] = useState<Mcq[]>(() => shuffle(CHAPTERS[0].mcq));
+  // Start in printed order and shuffle once mounted. Shuffling inside the
+  // initial state ran Math.random() separately on the server and in the
+  // browser, so the first question never matched and React threw a hydration
+  // error on every visit.
+  const [deck, setDeck] = useState<Mcq[]>(CHAPTERS[0].mcq);
+  useEffect(() => {
+    setDeck((d) => shuffle(d));
+  }, []);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [score, setScore] = useState(0);

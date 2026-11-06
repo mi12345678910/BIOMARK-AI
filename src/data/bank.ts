@@ -17,6 +17,9 @@
  */
 
 import type { QuestionPart } from "../lib/marking.ts";
+import { CH6 } from "./bank-ch6.ts";
+import { CH7 } from "./bank-ch7.ts";
+import { CH8 } from "./bank-ch8.ts";
 
 export interface Mcq {
   id: string;
@@ -51,6 +54,11 @@ export interface Structured {
    * wherever the intro or a prompt mentions one — enforced by a test.
    */
   figure?: string;
+  /**
+   * Further figures introduced inside sub-parts — "(b) FIGURE 12 shows a
+   * translation process". Shown after `figure`, in order.
+   */
+  extraFigures?: string[];
   parts: QuestionPart[];
 }
 
@@ -1724,7 +1732,7 @@ const CH5: Chapter = {
   ],
 };
 
-export const CHAPTERS: Chapter[] = [CH3, CH4, CH5];
+export const CHAPTERS: Chapter[] = [CH3, CH4, CH5, CH6, CH7, CH8];
 
 export function findChapter(id: string): Chapter | undefined {
   return CHAPTERS.find((c) => c.id === id);

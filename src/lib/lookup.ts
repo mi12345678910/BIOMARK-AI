@@ -76,7 +76,8 @@ export function tokenise(text: string): string[] {
 /* ── Term weighting ────────────────────────────────────────────────────── */
 
 /**
- * How rare a term is across the whole bank (inverse document frequency).
+ * How rare a term is among the papers of ONE chapter (inverse document
+ * frequency).
  *
  * Counting matched terms equally was the bug behind canned schemes hijacking
  * custom questions. Every Population Genetics prompt contains "frequency",
@@ -84,41 +85,64 @@ export function tokenise(text: string): string[] {
  * two-thirds of a stored prompt and triggered its mark scheme — even though
  * the terms that actually identify it ("albinism", "babies", "14") were absent.
  *
- * Weighting by rarity fixes that: the shared vocabulary counts for almost
- * nothing and the distinctive nouns carry the match.
+ * Weighting by rarity fixes that — but rarity must be measured WITHIN the
+ * chapter. The question being answered is "which paper is this?", and the
+ * competitors are the other papers on the same topic. Measured across the
+ * whole bank, adding Chapters 6–8 (some 240 prompts that never say "allele")
+ * made Population Genetics vocabulary look rare, so generic Chapter 5
+ * questions started matching schemes again. Per chapter, a topic's shared
+ * vocabulary stays weak however many other chapters are added.
  */
-const IDF: Map<string, number> = (() => {
-  const docs: string[][] = [];
+/**
+ * Corpus size the evidence thresholds were tuned on (53 stored prompts, when
+ * the bank was Chapters 3 and 5). Smaller chapters are scored as if they were
+ * this size so the thresholds keep their meaning.
+ */
+const CALIBRATED_CORPUS = 53;
+
+const IDF: Map<number, { idf: Map<string, number>; unseen: number }> = (() => {
+  const byChapter = new Map<number, { idf: Map<string, number>; unseen: number }>();
+
   for (const chapter of CHAPTERS) {
+    const docs: string[][] = [];
     for (const q of chapter.structured) {
       for (const part of q.parts) {
         docs.push([...new Set(tokenise(`${q.intro ?? ""} ${part.prompt}`))]);
       }
     }
-  }
+    if (docs.length === 0) continue;
 
-  const seenIn = new Map<string, number>();
-  for (const doc of docs) {
-    for (const term of doc) seenIn.set(term, (seenIn.get(term) ?? 0) + 1);
-  }
+    const seenIn = new Map<string, number>();
+    for (const doc of docs) {
+      for (const term of doc) seenIn.set(term, (seenIn.get(term) ?? 0) + 1);
+    }
 
-  const idf = new Map<string, number>();
-  for (const [term, count] of seenIn) {
-    // Squared, because plain IDF is too flat on a corpus this small: with 53
-    // documents "frequency" (in 16) scored 1.30 against "albinism" (in 1) at
-    // 4.07 — only 3× apart, so four generic terms outweighed a unique one.
-    // Squaring widens that to ~10× and lets the gate below actually separate
-    // a real identification from shared topic vocabulary.
-    const raw = Math.log(docs.length / count) + 0.1;
-    idf.set(term, raw * raw);
+    const idf = new Map<string, number>();
+    for (const [term, count] of seenIn) {
+      // Squared, because plain IDF is too flat on a corpus this small:
+      // "frequency" (in 16 of ~50 Chapter 5 prompts) scored 1.30 against
+      // "albinism" (in 1) at 4.07 — only 3× apart, so four generic terms
+      // outweighed a unique one. Squaring widens that to ~10× and lets the
+      // gates below separate a real identification from topic vocabulary.
+      //
+      // The corpus size is floored at the size the thresholds below were
+      // calibrated on. Chapter 3 holds only ~13 stored prompts, and at that
+      // size even a word used once barely registered, so its figure
+      // questions stopped matching at all.
+      const raw = Math.log(Math.max(docs.length, CALIBRATED_CORPUS) / count) + 0.1;
+      idf.set(term, raw * raw);
+    }
+    const rawUnseen = Math.log(Math.max(docs.length, CALIBRATED_CORPUS)) + 0.1;
+    byChapter.set(chapter.number, { idf, unseen: rawUnseen * rawUnseen });
   }
-  return idf;
+  return byChapter;
 })();
 
-/** Unseen terms are maximally distinctive. */
-function weightOf(term: string): number {
-  const raw = Math.log(60) + 0.1;
-  return IDF.get(term) ?? raw * raw;
+/** Weight of a term within a chapter. Unseen terms are maximally distinctive. */
+export function weightOf(term: string, chapter: number): number {
+  const table = IDF.get(chapter);
+  if (!table) return 0;
+  return table.idf.get(term) ?? table.unseen;
 }
 
 /* ── Case 1 — find a bankable question ─────────────────────────────────── */
@@ -262,7 +286,7 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
       for (const part of q.parts) {
         const allTerms = [...new Set([...introTerms, ...tokenise(part.prompt)])];
         const identifying = new Set(
-          allTerms.filter((t) => weightOf(t) >= DISTINCTIVE_WEIGHT),
+          allTerms.filter((t) => weightOf(t, chapter.number) >= DISTINCTIVE_WEIGHT),
         );
 
         // Checked before the verbatim shortcut, not after: "Calculate the
@@ -302,7 +326,7 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
         let matchedCount = 0;
         let anchored = false;
         for (const t of identifying) {
-          const w = weightOf(t);
+          const w = weightOf(t, chapter.number);
           totalWeight += w;
           if (studentTerms.has(t)) {
             matchedWeight += w;
@@ -348,8 +372,14 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
       // student is looking at FIGURE 2 — so a generic query like "what are
       // the stages of the cell cycle?" must not be handed its scheme. Require
       // the student to actually reference the figure.
+      //
+      // Only when the question as a whole is built around the figure — i.e. its
+      // intro introduces it. Some papers introduce the figure inside a later
+      // sub-part ("(b) FIGURE 11 shows…") after a part that needs none, and
+      // demanding a figure reference rejected those earlier parts outright.
       if (
         q.figure &&
+        figureRefsIn(q.intro ?? "").size > 0 &&
         !/\bf[il1|]gure\b|\brajah\b/i.test(text) &&
         studentFigures.size === 0
       ) {
@@ -360,14 +390,46 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
       // every word they contain, so without this the only thing separating
       // them — FIGURE 1 against FIGURE 2 — carried no weight at all and the
       // student was marked against the wrong paper's scheme.
-      const questionFigures = figureRefsIn(q.intro ?? "");
+      //
+      // Read from every part, not just the intro: a question can introduce a
+      // second figure inside a sub-part ("(b) FIGURE 12 shows a translation
+      // process"), and a student pasting only that part names Figure 12 —
+      // which, checked against the intro's Figure 11 alone, rejected the
+      // question they were actually answering.
+      const questionFigures = figureRefsIn(
+        [q.intro ?? "", ...q.parts.map((p) => p.prompt)].join(" "),
+      );
       if (questionFigures.size > 0 && studentFigures.size > 0) {
         const sameFigure = [...questionFigures].some((f) => studentFigures.has(f));
         if (!sameFigure) continue;
-        // Naming the right figure is decisive evidence on its own: it is the
-        // one fact a student can only have got from the paper in front of
-        // them, and the surrounding prose is near-identical between papers.
-        score = Math.max(score, FIGURE_MATCH_SCORE);
+        // Naming the right figure settles a match the WORDING already
+        // supports — the surrounding prose is near-identical between some
+        // papers. It is not evidence on its own: "FIGURE 1" now appears in
+        // Chapters 3, 6, 7 and 8, and boosting on the number alone handed
+        // every one of them the same score.
+        //
+        // Added, not substituted — and not capped here. Setting every agreeing
+        // question to one value, or capping the sum at 1, flattened them into a
+        // tie: Chapter 6 Q5 and Chapter 8 Q2 both print a FIGURE 5, and Chapter
+        // 6 won simply by being listed first. The reported score is clamped
+        // to 0–1 on the way out; ranking uses the full value.
+        if (score > 0) {
+          score += FIGURE_MATCH_BONUS;
+        } else {
+          // The figure number together with its caption identifies a paper
+          // even when every word of the caption is shared topic vocabulary.
+          // "FIGURE 9 shows part of model of E. coli lac operon" contains
+          // nothing a dozen other lac-operon prompts don't — but Chapter 7's
+          // FIGURE 9 is captioned "two types of abnormal meiotic division".
+          // Same number, caption quoted near-verbatim: that is this paper.
+          const caption = [...new Set(introTerms)];
+          if (caption.length >= 3) {
+            const quoted = caption.filter((t) => studentTerms.has(t)).length / caption.length;
+            if (quoted >= VERBATIM_CONFIDENCE) {
+              score = GENERIC_PROMPT_CEILING + FIGURE_MATCH_BONUS;
+            }
+          }
+        }
       }
 
       if (score > 0 && (!best || score > best.score)) {
@@ -385,7 +447,10 @@ export function findQuestionMatch(text: string): QuestionMatch | null {
   // student did not ask is worse than not matching at all: they get a canned
   // answer to someone else's question instead of an explanation of their own.
   // Anything below this falls through to the lecturer's notes.
-  return best && best.score >= MATCH_CONFIDENCE ? best : null;
+  if (!best || best.score < MATCH_CONFIDENCE) return null;
+  // Ranking used the uncapped value (a figure bonus can lift it past 1);
+  // report it in the documented 0–1 range.
+  return { ...best, score: Math.min(1, best.score) };
 }
 
 /**
@@ -449,7 +514,7 @@ export const GENERIC_PROMPT_CEILING = 0.5;
  * around. High because it is the one detail that cannot be guessed from the
  * topic — the surrounding wording is near-identical across papers.
  */
-export const FIGURE_MATCH_SCORE = 0.85;
+export const FIGURE_MATCH_BONUS = 0.35;
 
 /** Which stored part best matches a chunk of the student's text. */
 export function bestPartFor(
@@ -483,11 +548,17 @@ export function bestPartFor(
  * token longer than two characters), so a purely numeric answer would
  * otherwise look like no attempt at all.
  */
-export function hasAttempt(question: Structured, text: string): boolean {
+export function hasAttempt(question: Structured, rawText: string): boolean {
   const questionText = [
     question.intro ?? "",
     ...question.parts.map((p) => p.prompt),
   ].join(" ");
+
+  // The session header is part of the question, not the student's work.
+  // "PSPM II 2008/2009" pasted above a question contributed "pspm", "2008"
+  // and "2009" — three new words, exactly the threshold below — and a
+  // question with no answer was marked 0 instead of shown the model answer.
+  const text = rawText.replace(/(?:PSPM|UPS)\s+(?:I{1,3}|1|2)\s*\d{4}\s*\/\s*\d{4}/gi, " ");
 
   // An explicit answer marker with something after it. This is the strongest
   // signal and the only one that catches a one-word answer: "Name phase P. My
@@ -512,6 +583,10 @@ export function hasAttempt(question: Structured, text: string): boolean {
       // question pasted with its numbering intact looked like an attempt and
       // was marked 0.
       .replace(/^\s*\d+\s*[.)]/gm, " ")
+      // Nor is the session header: "PSPM II 2008/2009" pasted above a
+      // question supplied two "new" numbers and turned a question with no
+      // answer into a 0-mark result.
+      .replace(/(?:PSPM|UPS)\s+(?:I{1,3}|1|2)\s*\d{4}\s*\/\s*\d{4}/gi, " ")
       .replace(/(\d)[,\s](\d{3})\b/g, "$1$2")
       .match(/\d+(?:\.\d+)?/g) ?? [];
   const questionNumbers = new Set(numbersIn(questionText));

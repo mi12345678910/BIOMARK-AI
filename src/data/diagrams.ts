@@ -461,8 +461,12 @@ export const DIAGRAMS: DiagramAnswer[] = [
 ];
 
 /** Words that mean the student is being asked to draw, not to explain. */
+// Instructions only. "labelled" and bare "rajah" used to be here, but they
+// DESCRIBE a supplied figure — "Non-disjunction occurs in the chromosome
+// labelled N", "Berdasarkan Rajah 2" — and sent markable questions down the
+// diagram path. "Draw a labelled diagram" is still caught by "draw".
 const DRAWING_VERBS =
-  /\b(draw|sketch|label(?:led|ling)?|illustrate|annotate|diagram of|lukis(?:kan)?|labelkan|lakar(?:kan)?|rajah)\b/i;
+  /\b(draw|sketch|label|illustrate|annotate|diagram of|lukis(?:kan)?|labelkan|lakar(?:kan)?)\b/i;
 
 /**
  * Is this a drawing question?

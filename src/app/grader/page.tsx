@@ -347,8 +347,18 @@ export default function GraderPage() {
  * The scans are black line art on white, so they get a white plate — on the
  * dark theme they would otherwise be black-on-near-black and invisible.
  */
-function QuestionFigure({ src, intro }: { src?: string; intro?: string }) {
-  if (!intro && !src) return null;
+function QuestionFigure({
+  src,
+  intro,
+  extra,
+}: {
+  src?: string;
+  intro?: string;
+  /** Figures introduced inside sub-parts, e.g. "(b) FIGURE 12 shows…". */
+  extra?: string[];
+}) {
+  const figures = [src, ...(extra ?? [])].filter(Boolean) as string[];
+  if (!intro && figures.length === 0) return null;
   return (
     <div>
       {intro && (
@@ -356,14 +366,15 @@ function QuestionFigure({ src, intro }: { src?: string; intro?: string }) {
           {intro}
         </p>
       )}
-      {src && (
+      {figures.map((f) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
+          key={f}
+          src={f}
           alt="Figure for this question"
-          className="mx-auto mt-3 max-h-64 w-auto max-w-full rounded-xl bg-white p-3"
+          className="mx-auto mt-3 max-h-80 w-auto max-w-full rounded-xl bg-white p-3"
         />
-      )}
+      ))}
     </div>
   );
 }
@@ -457,6 +468,7 @@ function ResultCard({
           <div className="space-y-6 px-6 py-5">
             <QuestionFigure
               src={routed.match.question.figure}
+              extra={routed.match.question.extraFigures}
               intro={routed.match.question.intro}
             />
             {routed.result.parts.map((pr) => (
@@ -597,6 +609,7 @@ function ResultCard({
           <div className="space-y-6 px-6 py-5">
             <QuestionFigure
               src={routed.match.question.figure}
+              extra={routed.match.question.extraFigures}
               intro={routed.match.question.intro}
             />
             {routed.parts.map((part) => (
