@@ -333,6 +333,10 @@ export default function GraderPage() {
       )}
 
       {/* ── Case 1: graded against the scheme ─────────────────────── */}
+      {/* Several questions marked at once: the combined score comes first,
+          before any individual result. */}
+      {outcome?.mode === "results" && <OverallScore items={outcome.items} />}
+
       {outcome?.mode === "results" &&
         outcome.items.map((item, i) => (
           <ResultCard key={i} item={item} index={i} total={outcome.items.length} />
@@ -466,11 +470,29 @@ function ResultCard({
           </div>
 
           <div className="space-y-6 px-6 py-5">
+            {/* Score and mark allocation first — the student's first question
+                is "how did I do", and it used to be answered by a small pill
+                in the header with the full-marks message at the very bottom. */}
+            <ScoreSummary
+              awarded={routed.result.awarded}
+              maximum={routed.result.maximum}
+              rows={routed.result.parts.map((pr) => ({
+                ref: pr.part.ref,
+                prompt: pr.part.prompt,
+                awarded: pr.awarded,
+                maximum: pr.maximum,
+              }))}
+            />
+
             <QuestionFigure
               src={routed.match.question.figure}
               extra={routed.match.question.extraFigures}
               intro={routed.match.question.intro}
             />
+
+            <h3 className="border-t border-teal-700/15 pt-5 text-xs font-bold uppercase tracking-wider text-teal-700 dark:border-white/15 dark:text-teal-200">
+              {t("detailTitle")}
+            </h3>
             {routed.result.parts.map((pr) => (
               <div key={pr.part.ref}>
                 <div className="flex items-baseline gap-2">
@@ -583,12 +605,6 @@ function ResultCard({
                 </div>
               </div>
             )}
-
-            {routed.result.awarded === routed.result.maximum && (
-              <p className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-900 dark:text-emerald-100">
-                {t("fullMarksNote")}
-              </p>
-            )}
           </div>
         </section>
       )}
@@ -607,6 +623,10 @@ function ResultCard({
           </div>
 
           <div className="space-y-6 px-6 py-5">
+            <ScoreSummary
+              maximum={routed.parts.reduce((n, p) => n + p.marks, 0)}
+              rows={routed.parts.map((p) => ({ ref: p.ref, prompt: p.prompt, maximum: p.marks }))}
+            />
             <QuestionFigure
               src={routed.match.question.figure}
               extra={routed.match.question.extraFigures}
@@ -779,5 +799,160 @@ function ResultCard({
         </section>
       )}
     </div>
+  );
+}
+
+interface AllocationRow {
+  ref: string;
+  prompt: string;
+  /** Absent when the question was submitted without an answer. */
+  awarded?: number;
+  maximum: number;
+}
+
+/**
+ * The first thing in every result: the score, how far it is from full marks,
+ * and how the marks split across the parts. With no `awarded` it shows the
+ * allocation alone — what each part is worth — for a question submitted
+ * without an answer.
+ */
+function ScoreSummary({
+  rows,
+  awarded,
+  maximum,
+}: {
+  rows: AllocationRow[];
+  awarded?: number;
+  maximum: number;
+}) {
+  const { t } = useI18n();
+  const graded = awarded !== undefined;
+  const pct = graded && maximum > 0 ? Math.round((awarded / maximum) * 100) : 0;
+  const full = graded && awarded === maximum;
+
+  return (
+    <div className="rounded-2xl border border-teal-700/15 bg-gradient-to-br from-teal-50 to-white p-5 dark:border-white/15 dark:from-white/10 dark:to-white/5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+            {graded ? t("finalScore") : t("marksAvailable")}
+          </p>
+          <p className="mt-1 text-4xl font-bold tracking-tight text-[#14343f] dark:text-white">
+            {graded ? (
+              <>
+                {awarded}
+                <span className="text-2xl text-[#14343f]/50 dark:text-slate-400"> / {maximum}</span>
+              </>
+            ) : (
+              maximum
+            )}
+          </p>
+        </div>
+        {graded && (
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-bold ${
+              full
+                ? "bg-emerald-500 text-white"
+                : pct >= 50
+                  ? "bg-teal-700 text-white"
+                  : "bg-coral-500 text-white"
+            }`}
+          >
+            {pct}%
+          </span>
+        )}
+      </div>
+
+      {graded && (
+        <>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-teal-700/10 dark:bg-white/10">
+            <div
+              className={`h-full rounded-full ${full ? "bg-emerald-500" : pct >= 50 ? "bg-teal-600" : "bg-coral-500"}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p
+            className={`mt-3 text-sm font-medium ${
+              full ? "text-emerald-800 dark:text-emerald-200" : "text-[#14343f]/80 dark:text-slate-200"
+            }`}
+          >
+            {full
+              ? t("fullMarksNote")
+              : t("marksLostNote", { lost: maximum - awarded, max: maximum })}
+          </p>
+        </>
+      )}
+
+      <h4 className="mt-4 text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+        {t("markAllocation")}
+      </h4>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-[11px] uppercase tracking-wider text-[#14343f]/60 dark:text-slate-400">
+              <th className="py-1 pr-3 font-semibold">{t("partColumn")}</th>
+              <th className="py-1 pr-3 font-semibold" />
+              <th className="py-1 text-right font-semibold">{t("marksColumn")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const rowFull = r.awarded !== undefined && r.awarded === r.maximum;
+              const rowZero = r.awarded === 0;
+              return (
+                <tr key={r.ref} className="border-t border-teal-700/10 dark:border-white/10">
+                  <td className="py-1.5 pr-3 align-top font-bold text-teal-700 dark:text-teal-200">
+                    {r.ref}
+                  </td>
+                  <td className="py-1.5 pr-3 align-top text-[#14343f]/80 dark:text-slate-300">
+                    <span className="line-clamp-2">{r.prompt}</span>
+                  </td>
+                  <td
+                    className={`whitespace-nowrap py-1.5 text-right align-top font-bold ${
+                      rowFull
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : rowZero
+                          ? "text-coral-700 dark:text-coral-300"
+                          : "text-[#14343f] dark:text-white"
+                    }`}
+                  >
+                    {r.awarded !== undefined ? `${r.awarded} / ${r.maximum}` : `[${r.maximum}]`}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** Combined total when one submission held several questions. */
+function OverallScore({ items }: { items: RoutedSegment[] }) {
+  const { t } = useI18n();
+  const graded = items.flatMap((i) => (i.routed.mode === "graded" ? [i.routed.result] : []));
+  if (graded.length < 2) return null;
+
+  const awarded = graded.reduce((n, r) => n + r.awarded, 0);
+  const maximum = graded.reduce((n, r) => n + r.maximum, 0);
+  const pct = maximum > 0 ? Math.round((awarded / maximum) * 100) : 0;
+
+  return (
+    <section className="rounded-3xl bg-gradient-to-r from-teal-700 to-teal-600 px-6 py-5 text-white shadow-xl">
+      <p className="text-xs font-bold uppercase tracking-wider text-teal-100">
+        {t("overallScore", { count: graded.length })}
+      </p>
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <p className="text-4xl font-bold tracking-tight">
+          {awarded}
+          <span className="text-2xl text-teal-100"> / {maximum}</span>
+        </p>
+        <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-bold">{pct}%</span>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/20">
+        <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
+      </div>
+    </section>
   );
 }

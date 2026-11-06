@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DnaHelix } from "@/components/BioArt";
 import { useI18n } from "@/lib/i18n";
 import { CHAPTERS, findChapter, type Mcq } from "@/data/bank";
+import { mcqText } from "@/data/bank-bm";
 
 /** Fisher-Yates, so a re-run of the same chapter isn't the same order. */
 function shuffle<T>(items: T[]): T[] {
@@ -35,6 +36,8 @@ export default function QuizPage() {
   const [answeredCount, setAnsweredCount] = useState(0);
 
   const current = deck[index];
+  // Wording in the chosen language. Answer letters and figures stay on `current`.
+  const view = current ? mcqText(current, lang) : null;
   const finished = index >= deck.length;
 
   function restart(id = chapterId) {
@@ -120,7 +123,7 @@ export default function QuizPage() {
           </div>
 
           <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-[#14343f] dark:text-slate-100">
-            {current.stem}
+            {view!.stem}
           </p>
 
           {/* Diagram belonging to the stem. Scans are black line art on white,
@@ -157,7 +160,7 @@ export default function QuizPage() {
                 : "mt-4 space-y-2"
             }
           >
-            {current.options.map((opt) => {
+            {view!.options.map((opt) => {
               const letter = opt.trim().charAt(0).toUpperCase();
               const isAnswer = letter === current.answer.trim().charAt(0);
               const isPicked = picked === letter;
@@ -193,9 +196,9 @@ export default function QuizPage() {
                   ? `✓ ${t("correct")}`
                   : `✕ ${t("incorrect")} — ${current.answer}`}
               </p>
-              {current.explain && (
+              {view!.explain && (
                 <p className="mt-2 text-sm leading-relaxed text-[#14343f]/75 dark:text-slate-300">
-                  {current.explain}
+                  {view!.explain}
                 </p>
               )}
               <button

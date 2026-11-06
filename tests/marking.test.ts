@@ -1256,6 +1256,39 @@ check(
   ["c8-q14-pspm1-2023"],
 );
 
+// ── Every quiz question has Bahasa Melayu wording ─────────────────────────
+//
+// Switching to BM left every question in English, because the quiz read the
+// English bank directly. Translations live in bank-bm.ts; these checks make
+// sure none go missing and none can change which option is correct.
+{
+  const { MCQ_BM, mcqText } = await import("../src/data/bank-bm.ts");
+  const all = CHAPTERS.flatMap((c) => c.mcq);
+
+  const missing = all.filter((q) => !MCQ_BM[q.id]).map((q) => q.id);
+  check("every MCQ has a Bahasa Melayu translation", missing, []);
+
+  const orphans = Object.keys(MCQ_BM).filter((id) => !all.some((q) => q.id === id));
+  check("no translation for a question that doesn't exist", orphans, []);
+
+  const shifted = all.filter((q) => {
+    const bm = MCQ_BM[q.id];
+    if (!bm) return false;
+    const letters = (opts: string[]) => opts.map((o) => o.trim().charAt(0).toUpperCase()).join("");
+    return bm.options.length !== q.options.length || letters(bm.options) !== letters(q.options);
+  });
+  check("translated options keep the same letters in the same order", shifted.map((q) => q.id), []);
+
+  const explainMismatch = all.filter((q) => !!MCQ_BM[q.id] && !!q.explain !== !!MCQ_BM[q.id]!.explain);
+  check("every explanation is translated too", explainMismatch.map((q) => q.id), []);
+
+  const untranslated = all.filter((q) => MCQ_BM[q.id]?.stem === q.stem).map((q) => q.id);
+  check("no stem was copied across untranslated", untranslated, []);
+
+  check("English stays the default", mcqText(all[0]!, "en").stem, all[0]!.stem);
+  check("BM is used when chosen", mcqText(all[0]!, "bm").stem, MCQ_BM[all[0]!.id]!.stem);
+}
+
 // ── Marker features used by the new chapters ──────────────────────────────
 {
   const pol = {

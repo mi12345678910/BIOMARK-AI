@@ -124,6 +124,13 @@ const STRINGS = {
     whySubtitle:
       "From your lecturer's notes, on the exact concepts behind the scheme points you missed.",
     fullMarksNote: "Full marks — every scheme point covered. Nothing missed.",
+    marksLostNote: "{lost} of {max} marks lost — the breakdown and your lecturer's notes below show exactly where.",
+    markAllocation: "Mark allocation",
+    marksAvailable: "Marks available",
+    partColumn: "Part",
+    marksColumn: "Marks",
+    detailTitle: "Point-by-point marking",
+    overallScore: "Overall score — {count} questions",
 
     modelTitle: "How this question is marked",
     modelSubtitle: "you submitted the question without an answer",
@@ -264,6 +271,13 @@ const STRINGS = {
     whySubtitle:
       "Daripada nota pensyarah anda, tentang konsep tepat di sebalik mata skema yang tertinggal.",
     fullMarksNote: "Markah penuh — semua mata skema dipenuhi. Tiada yang tertinggal.",
+    marksLostNote: "{lost} daripada {max} markah hilang — pecahan markah dan nota pensyarah di bawah menunjukkan puncanya.",
+    markAllocation: "Peruntukan markah",
+    marksAvailable: "Markah diperuntukkan",
+    partColumn: "Bahagian",
+    marksColumn: "Markah",
+    detailTitle: "Penandaan mata demi mata",
+    overallScore: "Markah keseluruhan — {count} soalan",
 
     modelTitle: "Bagaimana soalan ini ditanda",
     modelSubtitle: "anda hantar soalan tanpa jawapan",
