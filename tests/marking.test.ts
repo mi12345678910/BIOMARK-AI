@@ -1289,6 +1289,21 @@ check(
   check("BM is used when chosen", mcqText(all[0]!, "bm").stem, MCQ_BM[all[0]!.id]!.stem);
 }
 
+// ── Marked results come before notes-only explanations ────────────────────
+// A stray fragment of scanned text routes to the notes; in scan order it was
+// shown first, ahead of the student's actual mark.
+{
+  const order = routeSubmission([
+    { label: "a", text: "Explain how a hormone works in general terms" },
+    {
+      label: "b",
+      text: "PSPM I 2017/2018\n10. FIGURE 13 shows the sequence of Polymerase Chain Reaction (PCR) process.\n(a) Identify stage S, T and U. Answer: S denaturation, T annealing, U extension",
+    },
+    { label: "c", text: "What is the role of DNA ligase?" },
+  ]).map((i) => i.routed.mode);
+  check("marked results are listed before notes-only explanations", order, ["graded", "explained", "explained"]);
+}
+
 // ── Marker features used by the new chapters ──────────────────────────────
 {
   const pol = {

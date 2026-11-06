@@ -191,5 +191,19 @@ export function routeSubmission(segments: Segment[]): RoutedSegment[] {
     i = j;
   }
 
-  return out;
+  // Marked results first, notes-only explanations last. A photo of one
+  // question often yields a stray fragment of scanned text that matches no
+  // paper and falls back to the notes; in scan order it came first, so the
+  // student had to scroll past a page of notes to find their mark. The sort
+  // is stable, so results of the same kind keep their original order.
+  const rank: Record<Routed["mode"], number> = {
+    graded: 0,
+    modelAnswer: 1,
+    diagram: 2,
+    explained: 3,
+  };
+  return out
+    .map((item, i) => ({ item, i }))
+    .sort((a, b) => rank[a.item.routed.mode] - rank[b.item.routed.mode] || a.i - b.i)
+    .map(({ item }) => item);
 }
