@@ -1404,5 +1404,53 @@ check(
   check("other sections still count", markPart(grouped, "alpha beta gamma delta").awarded, 3);
 }
 
+// ── "Why you lost those marks": personal explanation per lost part ─────────
+{
+  const { explainLostMarks, wordFor } = await import("../src/lib/feedback.ts");
+  const { routeOne } = await import("../src/lib/route.ts");
+
+  check("the student's own word is shown, not the bank stem", wordFor("The DNA is Replicated twice", "replicat"), "Replicated");
+
+  const part = {
+    ref: "(c)", prompt: "Explain how DNA replicates.", marks: 2,
+    points: [
+      { text: "Helicase breaks the hydrogen bonds between bases", marks: 1, require: [["helicase"], ["hydrogen bond"]] },
+      { text: "DNA polymerase adds complementary nucleotides", marks: 1, require: [["polymerase"], ["complementary"]] },
+    ],
+  };
+  const answer = "Helicase unwinds the helix. DNA polymerase adds complementary nucleotides.";
+  const pr = markPart(part, answer);
+  const en = explainLostMarks(pr, answer, part.prompt, "en")!;
+  check("explanation states the part score", en.startsWith("In (c) you scored 1/2"), true);
+  check("explanation names what the student wrote", en.includes("“Helicase”"), true);
+  check("explanation names the missing KPM keyword", en.includes("“hydrogen bonds”"), true);
+  check("near miss quotes the scheme point it failed", en.includes("“Helicase breaks the hydrogen bonds between bases”"), true);
+  check("explanation is at most two sentences", en.split(/(?<=[.])\s+(?=[A-Z])/).length <= 2, true);
+  check("BM explanation is in Bahasa Melayu", explainLostMarks(pr, answer, part.prompt, "bm")!.startsWith("Bagi (c), anda memperoleh 1/2"), true);
+  check("no explanation for a part with full marks", explainLostMarks(markPart(part, answer + " hydrogen bonds"), answer, "", "en"), null);
+
+  const echo = markPart(part, "Explain how DNA replicates: helicase");
+  check(
+    "words copied from the question are not praised",
+    explainLostMarks(echo, "Explain how DNA replicates: helicase", "Explain how DNA helicase replicates.", "en")!.includes("you correctly used"),
+    false,
+  );
+
+  // Every lost part across the bank gets an explanation and its own notes slot.
+  let lost = 0, explained = 0, crossChapter = 0;
+  for (const c of CHAPTERS) for (const q of c.structured) for (const p of q.parts) {
+    const r = routeOne(`${q.intro ?? ""}\n${p.ref} ${p.prompt}\nAnswer: I am not sure about this one`);
+    if (r.mode !== "graded") continue;
+    for (const lp of r.lostParts) {
+      lost++;
+      const res = r.result.parts.find((x) => x.part.ref === lp.ref)!;
+      if (explainLostMarks(res, r.answer, `${q.intro ?? ""} ${res.part.prompt}`, "en")) explained++;
+      if (lp.notes.some((n) => n.section.chapter !== c.number)) crossChapter++;
+    }
+  }
+  check("every part that lost marks gets an explanation", explained, lost);
+  check("per-part notes stay in the question's chapter", crossChapter, 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

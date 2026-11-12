@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimalCell, DnaHelix, PlantCell } from "@/components/BioArt";
+import { explainLostMarks } from "@/lib/feedback";
 import { useI18n } from "@/lib/i18n";
 import { LOW_CONFIDENCE, recogniseImages } from "@/lib/ocr";
 import { routeSubmission, type Routed, type RoutedSegment } from "@/lib/route";
@@ -565,23 +566,12 @@ function ResultCard({
               </div>
             ))}
 
-            {/* Why the lost marks were lost — the lecturer's own material on
-                the concepts behind the missed scheme points. */}
-            {/* Marks were lost but nothing in this chapter's notes covers the
-                concept. Say so, rather than leaving the section out or
-                borrowing another chapter's material. */}
-            {routed.notes.length === 0 && routed.result.awarded < routed.result.maximum && (
-              <div className="border-t border-teal-700/15 pt-5 dark:border-white/15">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
-                  {t("whyTitle")}
-                </h3>
-                <p className="mt-2 rounded-xl border border-teal-700/15 bg-teal-700/5 px-4 py-3 text-sm text-[#14343f]/80 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
-                  {t("noNotesForConcept")}
-                </p>
-              </div>
-            )}
-
-            {routed.notes.length > 0 && (
+            {/* Why the lost marks were lost — part by part: a short personal
+                explanation comparing the answer with the missed scheme
+                points, then the lecturer's note on that concept directly
+                underneath. Where this chapter's notes do not cover the
+                concept, say so rather than borrowing another chapter's. */}
+            {routed.lostParts.length > 0 && (
               <div className="border-t border-teal-700/15 pt-5 dark:border-white/15">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
                   {t("whyTitle")}
@@ -590,35 +580,63 @@ function ResultCard({
                   {t("whySubtitle")}
                 </p>
 
-                <div className="mt-3 space-y-4">
-                  {routed.notes.map((n, i) => (
-                    <article
-                      key={i}
-                      className="rounded-2xl border border-teal-700/15 bg-teal-700/5 p-4 dark:border-white/15 dark:bg-white/5"
-                    >
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
-                        {t("pickChapter")} {n.section.chapter} ·{" "}
-                        {lang === "bm" ? n.section.chapterBm : n.section.chapterEn}
-                      </p>
-                      <h4 className="mt-1 text-sm font-bold text-[#14343f] dark:text-white">
-                        {n.section.outcome}
-                      </h4>
-                      <ul className="mt-2 space-y-1.5">
-                        {/* The lines about what was missed — not simply the
-                            section's opening lines, which can be about a
-                            different stage entirely. */}
-                        {n.lines.map((c, ci) => (
-                          <li
-                            key={ci}
-                            className="flex gap-2 text-sm leading-relaxed text-[#14343f]/90 dark:text-slate-100"
+                <div className="mt-3 space-y-5">
+                  {routed.lostParts.map((lp) => {
+                    const pr = routed.result.parts.find((p) => p.part.ref === lp.ref);
+                    if (!pr) return null;
+                    const explanation = explainLostMarks(
+                      pr,
+                      routed.answer,
+                      `${routed.match.question.intro ?? ""} ${pr.part.prompt}`,
+                      lang,
+                    );
+                    return (
+                      <div key={lp.ref} className="space-y-2">
+                        {explanation && (
+                          <p className="rounded-xl border-l-4 border-coral-400 bg-coral-400/10 px-4 py-3 text-sm leading-relaxed text-[#14343f] dark:bg-coral-400/15 dark:text-slate-100">
+                            {explanation}
+                          </p>
+                        )}
+
+                        {lp.notes.map((n, i) => (
+                          <article
+                            key={i}
+                            className="rounded-2xl border border-teal-700/15 bg-teal-700/5 p-4 dark:border-white/15 dark:bg-white/5"
                           >
-                            <span className="text-teal-600 dark:text-teal-300">•</span>
-                            <span>{c}</span>
-                          </li>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+                              {t("lecturerNote")} · {t("pickChapter")} {n.section.chapter} ·{" "}
+                              {lang === "bm" ? n.section.chapterBm : n.section.chapterEn}
+                            </p>
+                            <h4 className="mt-1 text-sm font-bold text-[#14343f] dark:text-white">
+                              {n.section.outcome}
+                            </h4>
+                            <ul className="mt-2 space-y-1.5">
+                              {/* The lines about what was missed — not simply
+                                  the section's opening lines, which can be
+                                  about a different stage entirely. */}
+                              {n.lines.map((c, ci) => (
+                                <li
+                                  key={ci}
+                                  className="flex gap-2 text-sm leading-relaxed text-[#14343f]/90 dark:text-slate-100"
+                                >
+                                  <span className="text-teal-600 dark:text-teal-300">•</span>
+                                  <span>{c}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </article>
                         ))}
-                      </ul>
-                    </article>
-                  ))}
+
+                        {lp.notes.length === 0 && (
+                          <p className="rounded-xl border border-teal-700/15 bg-teal-700/5 px-4 py-3 text-sm text-[#14343f]/80 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
+                            {lp.seeAlso
+                              ? t("seeNoteAbove", { ref: lp.seeAlso })
+                              : t("noNotesForConcept")}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

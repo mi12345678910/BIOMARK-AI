@@ -122,9 +122,11 @@ const STRINGS = {
 
     whyTitle: "Why you lost those marks",
     whySubtitle:
-      "From your lecturer's notes, on the exact concepts behind the scheme points you missed.",
+      "Part by part: what your answer missed against the scheme, then your lecturer's note on that concept.",
     fullMarksNote: "Full marks — every scheme point covered. Nothing missed.",
     noNotesForConcept: "No additional lecturer notes available for this specific concept.",
+    lecturerNote: "Lecturer's note",
+    seeNoteAbove: "The lecturer's note for this concept is shown under {ref} above.",
     marksLostNote: "{lost} of {max} marks lost — the breakdown and your lecturer's notes below show exactly where.",
     markAllocation: "Mark allocation",
     marksAvailable: "Marks available",
@@ -270,9 +272,11 @@ const STRINGS = {
 
     whyTitle: "Mengapa markah itu hilang",
     whySubtitle:
-      "Daripada nota pensyarah anda, tentang konsep tepat di sebalik mata skema yang tertinggal.",
+      "Bahagian demi bahagian: apa yang tertinggal dalam jawapan anda berbanding skema, diikuti nota pensyarah tentang konsep itu.",
     fullMarksNote: "Markah penuh — semua mata skema dipenuhi. Tiada yang tertinggal.",
     noNotesForConcept: "Tiada nota pensyarah tambahan bagi konsep khusus ini.",
+    lecturerNote: "Nota pensyarah",
+    seeNoteAbove: "Nota pensyarah bagi konsep ini dipaparkan di bawah {ref} di atas.",
     marksLostNote: "{lost} daripada {max} markah hilang — pecahan markah dan nota pensyarah di bawah menunjukkan puncanya.",
     markAllocation: "Peruntukan markah",
     marksAvailable: "Markah diperuntukkan",

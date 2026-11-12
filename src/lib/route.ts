@@ -19,8 +19,26 @@ import {
 } from "./lookup.ts";
 import { findDiagram, isDrawingQuestion, type DiagramAnswer } from "../data/diagrams.ts";
 
+/** A part that lost marks, and the lecturer's note to show beneath its
+ *  explanation. */
+export interface LostPart {
+  ref: string;
+  notes: NoteMatch[];
+  /** The best note was already shown under this earlier part. */
+  seeAlso?: string;
+}
+
 export type Routed =
-  | { mode: "graded"; match: QuestionMatch; result: QuestionResult; notes: NoteMatch[] }
+  | {
+      mode: "graded";
+      match: QuestionMatch;
+      result: QuestionResult;
+      /** What the student submitted — the explanation quotes their words. */
+      answer: string;
+      lostParts: LostPart[];
+      /** Every note shown, across all parts. */
+      notes: NoteMatch[];
+    }
   | { mode: "modelAnswer"; match: QuestionMatch; parts: QuestionPart[] }
   | { mode: "diagram"; diagram: DiagramAnswer }
   | { mode: "explained"; notes: NoteMatch[] };
@@ -72,22 +90,35 @@ export function routeOne(text: string): Routed {
   for (const part of parts) answers[part.ref] = text;
   const result = markQuestion(parts, answers);
 
-  // Notes covering the concepts behind the points they missed.
-  const missedText = result.parts
-    .flatMap((pr) => pr.results.filter((r) => !r.earned))
-    .map((r) => `${r.point.text} ${r.missingGroups.flat().join(" ")}`)
-    .join(" ");
+  // One note per part that lost marks, on the concept behind the points it
+  // missed, so each part's explanation has its own reference box underneath.
+  // The question's own chapter only. Empty is a valid answer: the page then
+  // says no lecturer notes cover this concept, rather than borrowing another
+  // topic's. A note already shown for an earlier part is not repeated.
+  const shownIn = new Map<NoteMatch["section"], string>();
+  const lostParts: LostPart[] = result.parts
+    .filter((pr) => pr.awarded < pr.maximum)
+    .map((pr) => {
+      const ref = pr.part.ref;
+      const missedText = pr.results
+        .filter((r) => !r.earned)
+        .map((r) => `${r.point.text} ${r.missingGroups.flat().join(" ")}`)
+        .join(" ");
+      if (!missedText.trim()) return { ref, notes: [] };
+      const found = searchNotes(missedText, 3, match.chapterNumber, match.chapterNumber);
+      const fresh = found.filter((n) => !shownIn.has(n.section)).slice(0, 1);
+      for (const n of fresh) shownIn.set(n.section, ref);
+      const seeAlso = fresh.length === 0 && found[0] ? shownIn.get(found[0].section) : undefined;
+      return seeAlso ? { ref, notes: fresh, seeAlso } : { ref, notes: fresh };
+    });
 
   return {
     mode: "graded",
     match,
     result,
-    // The question's own chapter only. Empty is a valid answer: the page
-    // then says no lecturer notes cover this concept, rather than borrowing
-    // another topic's.
-    notes: missedText.trim()
-      ? searchNotes(missedText, 2, match.chapterNumber, match.chapterNumber)
-      : [],
+    answer: text,
+    lostParts,
+    notes: lostParts.flatMap((lp) => lp.notes),
   };
 }
 
