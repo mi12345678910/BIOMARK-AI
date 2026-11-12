@@ -11,6 +11,7 @@ import { markQuestion, type QuestionPart, type QuestionResult } from "./marking.
 import {
   findQuestionMatch,
   hasAttempt,
+  notesFromOneChapter,
   searchNotes,
   selectRelevantParts,
   type NoteMatch,
@@ -54,10 +55,10 @@ export function routeOne(text: string): Routed {
   if (!match && isDrawingQuestion(text)) {
     const diagram = findDiagram(text);
     if (diagram) return { mode: "diagram", diagram };
-    return { mode: "explained", notes: searchNotes(text, 3) };
+    return { mode: "explained", notes: notesFromOneChapter(text, 3) };
   }
 
-  if (!match) return { mode: "explained", notes: searchNotes(text, 3) };
+  if (!match) return { mode: "explained", notes: notesFromOneChapter(text, 3) };
 
   const parts = selectRelevantParts(match.question, text);
 
@@ -81,7 +82,12 @@ export function routeOne(text: string): Routed {
     mode: "graded",
     match,
     result,
-    notes: missedText.trim() ? searchNotes(missedText, 2, match.chapterNumber) : [],
+    // The question's own chapter only. Empty is a valid answer: the page
+    // then says no lecturer notes cover this concept, rather than borrowing
+    // another topic's.
+    notes: missedText.trim()
+      ? searchNotes(missedText, 2, match.chapterNumber, match.chapterNumber)
+      : [],
   };
 }
 

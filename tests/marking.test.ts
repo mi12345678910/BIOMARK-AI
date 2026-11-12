@@ -1289,6 +1289,62 @@ check(
   check("BM is used when chosen", mcqText(all[0]!, "bm").stem, MCQ_BM[all[0]!.id]!.stem);
 }
 
+// ── Notes never come from another chapter ─────────────────────────────────
+//
+// Across every scheme point in the bank, the "why you lost marks" notes must
+// come from the question's own chapter or not at all. Before this, 110 of 955
+// points pulled in another chapter — Chapter 9's "Definition of growth" for a
+// Cell Division "cell growth" point.
+{
+  const { notesFromOneChapter } = await import("../src/lib/lookup.ts");
+  let foreign = 0;
+  const examples: string[] = [];
+  for (const ch of CHAPTERS) {
+    for (const q of ch.structured) {
+      for (const part of q.parts) {
+        for (const pt of part.points) {
+          const missed = `${pt.text} ${pt.require.flat().join(" ")}`;
+          for (const n of searchNotes(missed, 2, ch.number, ch.number)) {
+            if (n.section.chapter !== ch.number) {
+              foreign++;
+              if (examples.length < 3) examples.push(`${q.id} ${part.ref} -> Ch${n.section.chapter}`);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (examples.length) examples.forEach((e) => console.log(`  ! ${e}`));
+  check("feedback notes never come from another chapter", foreign, 0);
+
+  // The Figure 1 cell-cycle question that showed Ch6 and Ch9 notes.
+  const fig1 = routeSubmission([
+    {
+      label: "p.jpg",
+      text: "PSPM I 2018/2019\n1. (a) FIGURE 1 shows a cell cycle.\n(ii) Describe the events that occur in phase Q. Answer: the cell divides\n(iii) Explain the importance of phase R. Answer: maintain the same number of chromosomes",
+    },
+  ])[0]!.routed;
+  check(
+    "a Chapter 3 question gets only Chapter 3 notes",
+    fig1.mode === "graded" ? [...new Set(fig1.notes.map((n) => n.section.chapter))] : "not graded",
+    [3],
+  );
+
+  // Unknown chapter (notes-only answer): one chapter per card, never a mix.
+  const mixed = notesFromOneChapter("base sequence mutation and blue white screening of recombinant colonies", 3);
+  check("a notes-only answer draws on a single chapter", new Set(mixed.map((n) => n.section.chapter)).size <= 1, true);
+
+  // A section sharing one generic word is not "related".
+  check(
+    "one shared generic word is not enough to show a note",
+    // Only "cell" appears in the Chapter 3 notes.
+    searchNotes("cell turgor osmosis plasmolysis", 3, 3, 3).length,
+    0,
+  );
+  // But a single-concept question still gets its notes.
+  check("a one-concept question still gets notes", searchNotes("What happens during transcription?", 3).length > 0, true);
+}
+
 // ── "Why you lost those marks" shows the lines about the missed point ─────
 // The right note section was found, but only its first six lines were shown —
 // G1, G2 and M — while the S-phase line about DNA replication sat tenth.

@@ -776,9 +776,12 @@ export interface NoteMatch {
  * kept in their original order. A short line directly above a chosen one is
  * kept too, because the notes use them as headings — "S phase (Synthesis
  * Phase)" is what makes "DNA replication occurs." readable on its own.
- * Falls back to the opening lines only when nothing in the section matches.
+ * Returns null when no line in the section mentions any query term: a
+ * section that matches only through its heading has nothing specific to say,
+ * and showing its opening lines instead is what made explanations look
+ * unrelated to the mark that was lost.
  */
-function relevantLines(section: NoteSection, terms: string[], max = 6): string[] {
+function relevantLines(section: NoteSection, terms: string[], max = 6): string[] | null {
   const scored = section.content.map((line, i) => {
     const l = line.toLowerCase();
     return { i, hits: terms.filter((t) => l.includes(t)).length };
@@ -790,7 +793,7 @@ function relevantLines(section: NoteSection, terms: string[], max = 6): string[]
     .slice(0, max)
     .map((s) => s.i);
 
-  if (chosen.length === 0) return section.content.slice(0, max);
+  if (chosen.length === 0) return null;
 
   const keep = new Set(chosen);
   for (const i of chosen) {
@@ -805,6 +808,21 @@ function relevantLines(section: NoteSection, terms: string[], max = 6): string[]
  * the learning-outcome line weighted heavily — a term appearing in the outcome
  * is a much stronger topic signal than one buried in a bullet.
  */
+/** Distinct query terms a note section must share to count as related. */
+export const MIN_NOTE_TERMS = 2;
+
+/**
+ * Notes for a question whose chapter is unknown: rank everything, then keep
+ * only the chapter of the best match. Stray scanned text otherwise drew one
+ * card's worth of notes from two unrelated chapters at once — Mutation and
+ * Recombinant DNA side by side.
+ */
+export function notesFromOneChapter(text: string, limit = 3): NoteMatch[] {
+  const best = searchNotes(text, 1);
+  if (best.length === 0) return [];
+  return searchNotes(text, limit, undefined, best[0]!.section.chapter);
+}
+
 export function searchNotes(
   text: string,
   limit = 3,
@@ -815,6 +833,13 @@ export function searchNotes(
    * from an unrelated topic, which reads as a misunderstanding.
    */
   preferChapter?: number,
+  /**
+   * Restrict results to this chapter. Preference alone was not enough: across
+   * 955 scheme points, 110 still pulled in another chapter's notes — a Cell
+   * Division "cell growth" point brought up Chapter 9's "Definition of
+   * growth", a "DNA is replicated" point Chapter 6's replication notes.
+   */
+  onlyChapter?: number,
 ): NoteMatch[] {
   const terms = [...new Set(tokenise(text))];
   if (!terms.length) return [];
@@ -822,6 +847,7 @@ export function searchNotes(
   const scored: NoteMatch[] = [];
 
   for (const section of NOTES) {
+    if (onlyChapter !== undefined && section.chapter !== onlyChapter) continue;
     const outcome = section.outcome.toLowerCase();
     const body = section.content.join(" ").toLowerCase();
 
@@ -836,13 +862,22 @@ export function searchNotes(
       if (inOutcome || inBody) matchedTerms.push(term);
     }
 
+    // Related, not merely touching: two distinct terms in common, and at
+    // least one line of the body that mentions them. One shared word —
+    // "cell", "gene" — is how unconnected material used to get through.
+    // Capped at the query's own size: "What happens during transcription?"
+    // has a single meaningful term and is still a perfectly clear question.
+    if (matchedTerms.length < Math.min(MIN_NOTE_TERMS, terms.length)) continue;
+    const lines = relevantLines(section, terms);
+    if (!lines) continue;
+
     if (score > 0) {
       // Normalise so a long section isn't favoured purely for being long.
       let final = score / Math.sqrt(terms.length);
       if (preferChapter !== undefined && section.chapter === preferChapter) {
         final *= 2;
       }
-      scored.push({ section, score: final, matchedTerms, lines: relevantLines(section, terms) });
+      scored.push({ section, score: final, matchedTerms, lines });
     }
   }
 

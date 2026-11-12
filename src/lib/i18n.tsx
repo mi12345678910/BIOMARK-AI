@@ -124,6 +124,7 @@ const STRINGS = {
     whySubtitle:
       "From your lecturer's notes, on the exact concepts behind the scheme points you missed.",
     fullMarksNote: "Full marks — every scheme point covered. Nothing missed.",
+    noNotesForConcept: "No additional lecturer notes available for this specific concept.",
     marksLostNote: "{lost} of {max} marks lost — the breakdown and your lecturer's notes below show exactly where.",
     markAllocation: "Mark allocation",
     marksAvailable: "Marks available",
@@ -271,6 +272,7 @@ const STRINGS = {
     whySubtitle:
       "Daripada nota pensyarah anda, tentang konsep tepat di sebalik mata skema yang tertinggal.",
     fullMarksNote: "Markah penuh — semua mata skema dipenuhi. Tiada yang tertinggal.",
+    noNotesForConcept: "Tiada nota pensyarah tambahan bagi konsep khusus ini.",
     marksLostNote: "{lost} daripada {max} markah hilang — pecahan markah dan nota pensyarah di bawah menunjukkan puncanya.",
     markAllocation: "Peruntukan markah",
     marksAvailable: "Markah diperuntukkan",

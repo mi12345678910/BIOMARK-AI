@@ -567,6 +567,20 @@ function ResultCard({
 
             {/* Why the lost marks were lost — the lecturer's own material on
                 the concepts behind the missed scheme points. */}
+            {/* Marks were lost but nothing in this chapter's notes covers the
+                concept. Say so, rather than leaving the section out or
+                borrowing another chapter's material. */}
+            {routed.notes.length === 0 && routed.result.awarded < routed.result.maximum && (
+              <div className="border-t border-teal-700/15 pt-5 dark:border-white/15">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
+                  {t("whyTitle")}
+                </h3>
+                <p className="mt-2 rounded-xl border border-teal-700/15 bg-teal-700/5 px-4 py-3 text-sm text-[#14343f]/80 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
+                  {t("noNotesForConcept")}
+                </p>
+              </div>
+            )}
+
             {routed.notes.length > 0 && (
               <div className="border-t border-teal-700/15 pt-5 dark:border-white/15">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-200">
