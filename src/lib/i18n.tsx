@@ -11,7 +11,7 @@ export type Language = "en" | "bm";
 
 const STRINGS = {
   en: {
-    brand: "BioMark AI 2.0",
+    brand: "BioMark AI 3.0",
     tagline: "KPM Matriculation Biology · PSPM standard",
     navHome: "Home",
     navGrader: "Auto-Grader",
@@ -161,7 +161,7 @@ const STRINGS = {
   },
 
   bm: {
-    brand: "BioMark AI 2.0",
+    brand: "BioMark AI 3.0",
     tagline: "Biologi Matrikulasi KPM · Standard PSPM",
     navHome: "Utama",
     navGrader: "Penanda Auto",
